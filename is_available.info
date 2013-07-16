@@ -1,0 +1,20 @@
+name = "Is Available?"
+description = "Search for vacant resources during a specified time period."
+core = 7.x
+package = "is_available"
+files[] = is_available.classes.inc
+
+configure = admin/config/content/is_available
+
+dependencies[] = date
+dependencies[] = eck
+dependencies[] = devel
+
+stylesheets[all][] = css/is_available.css
+
+scripts[] = js/is_available.js
+
+;scripts[] = js/lib/jquery.js
+;scripts[] = js/lib/timeentry.js
+
+

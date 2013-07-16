@@ -1,0 +1,124 @@
+/* CSS for room search form */
+
+/* Building field */
+.building {
+	width: 38%;
+	float: left;
+	margin: 0 0 20px 0;
+}
+
+/* Room type field*/
+.room-type {
+	float: right;
+	width: 55%;
+	margin: 0 0 20px 0;
+}
+
+/* Room type options dropdown */
+.room-type .form-select {
+	width: 100%;
+}
+
+/* Building options dropdown */
+.building .form-select {
+	width: 100%;
+}
+
+/* "Search" button */
+.search {
+	float: left;
+	margin: 0 7px 0 0px;
+}
+
+/* Datepicker fields */
+.form-type-date-popup .date-padding {
+	padding: 0px !important;
+	margin: 0 5px 0 0;
+}
+
+/* Start time field */
+div.form-item.form-type-textfield.form-item-cal-popup-start-time {
+	float: left;
+	width: 60%;
+	clear: both;
+	margin: 7px 0 0 0;
+}
+
+/* End time field */
+div.form-item.form-type-textfield.form-item-cal-popup-end-time {
+	width: 60%;
+	margin: 7px 0 0 0;
+}
+
+span.timeEntry_wrap {
+	width: 60%;
+}
+
+/* Width of start time textfield */
+input#edit-cal-popup-start--2-timeEntry-popup-1.form-text.hasTimeEntry.date-popup-init {
+	width: 100%;
+}
+
+/* Width of end time textfield */
+input#edit-cal-popup-end--2-timeEntry-popup-1.form-text.hasTimeEntry.date-popup-init {
+	width: 100%;
+}
+
+div.form-item.form-type-textfield.form-item-cal-popup-start-date {
+	float: left;
+	margin-top: -25px;
+}
+
+/* Hide the end date, b/c it's the same as the start date */
+div.form-item.form-type-textfield.form-item-cal-popup-end-date {
+ /*	visibility: hidden; uncomment after fixing js*/ 
+ margin-top: -25px;
+}
+
+/* Start date/time field */
+div.cal-popup-start {
+	width: 51%;
+	float: left;
+}
+
+/* End date/time field */
+div.cal-popup-end {
+	width: 49%;
+	float: right;
+}
+
+div#available-rooms {
+	clear: both;
+	margin: 10px 0 0 0;
+}
+
+section.block-ubccs-empty-room-list h2.block-title {
+	font-size: x-large;
+}
+
+label[for="edit_building_name--2"] {
+	font-style: normal;
+}
+
+label[for="edit-type--2"] {
+	font-style: normal;
+}
+
+div.form-item-cal-popup-end-time div.description {
+	visibility: hidden;
+}
+
+div.form-item-cal-popup-end-date div.description {
+	visibility: hidden;
+}
+
+label[for="edit-cal-popup-start--2-datepicker-popup-0"] {
+	visibility: hidden;
+	height = 0px;
+}
+
+label[for="edit-cal-popup-end--2-datepicker-popup-0"] {
+	visibility: hidden;
+	height = 0px;
+}
+
