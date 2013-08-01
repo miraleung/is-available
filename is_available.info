@@ -14,7 +14,5 @@ stylesheets[all][] = css/is_available.css
 
 scripts[] = js/is_available.js
 
-;scripts[] = js/lib/jquery.js
-;scripts[] = js/lib/timeentry.js
 
 

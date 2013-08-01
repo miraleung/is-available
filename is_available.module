@@ -43,13 +43,13 @@ function is_available_menu() {
 }
 
 /**
- * Forms
+ * Forms 
  */
 
 /**
  * Implements hook_form().
  */
-function is_available_form() {
+function is_available_form() { 
 	return drupal_get_form('is_available_resource_search_form');
 } 
 
@@ -186,7 +186,6 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	'#size' => $date_size,
 	'#attributes' => array(
 		'onclick' => 'GetdatePicker(this);',
-		// 'readonly' => 'readonly'
 		),
 	'#prefix' => '<div class="cal-popup-end">',
 	'#suffix' => '</div>',
@@ -284,15 +283,11 @@ function is_available_building_options(&$buildings) {
  */
 function get_dropdown_building_options($resource_types, 
 	$value_resource_type, $all_building_options, $all) {
-	////dpm("GET DROPDOWN BUILDING");
-	////dpm("EQUAL? ");
-	////dpm($value_resource_type == $all);
-	////dpm("ALL: " . $value_resource_type . ", " . $all); 
-
+	
  	if ($value_resource_type == $all || empty($resource_types) ||
 		!in_array($value_resource_type, array_keys($resource_types))) {
-		if ($value_resource_type == $all) ////dpm("ASDFASDFASDASDFS " . $all);
-		return $all_building_options;
+		if ($value_resource_type == $all) 
+			return $all_building_options;
 	}
 	
 	$building_options = array();

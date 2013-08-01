@@ -41,6 +41,27 @@ function array_count_key_start_with($array, $term, $start_index = 0) {
 	return $sum;
 }
 
+function vget_checked_entity_types($nth_setting) {
+	return vget_checked_names('is_available_entity_type_' . $nth_setting . '_');
+}
+function vget_checked_room_types($nth_setting, $et) {
+	return vget_checked_names('is_available_resource_type_' . $nth_setting . '_' . $et . '_');
+}
+
+function vget_checked_auth_buildings($nth_setting) {
+	return vget_checked_names('is_available_auth_building_' . $nth_setting . '_');
+}
+
+function vget_checked_names($term) {
+	$ret_array = array();
+	$mysql_query = "SELECT name FROM variable WHERE name LIKE '" . $term . "%'";
+	$query = db_query($mysql_query);
+	foreach ($query as $q) {
+		if (variable_get($q->name, 0) == 1)
+			$ret_array[$q->name] = $q->name;
+	}
+	return $ret_array;
+}
 
 /**
  * ===========================================
@@ -109,6 +130,8 @@ class IsAvailableAdminSettingsForm {
 	// Buttons
 	private $KEY_BUTTON						= '_button';
 	private $KEY_FS_FORM_STAGE		= 'z_array_form_stage';
+	private $KEY_CONFIG_WRAPPER		= 'config-wrapper';
+	function get_wrapper_config() { return $this->KEY_CONFIG_WRAPPER; }
 
 	
 	// Other
@@ -140,13 +163,11 @@ class IsAvailableAdminSettingsForm {
 		$mysql_query = "SELECT name FROM variable WHERE name LIKE '" . $setting_title . "%'";
 		$query = db_query($mysql_query);
 		foreach ($query as $q) {
-			dpm($q->name . ", " . variable_get($q->name), "");
 			$k = substr($q->name, strlen($setting_title));
 				$array_return[$k] =
 					variable_get($q->name, 'Setting ' . strtoupper($k) . ' (unconfigured)');
 			}
 		}
-		dpm($array_return);
 		return $array_return;
 	}
 	

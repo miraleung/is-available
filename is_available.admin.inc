@@ -30,7 +30,7 @@ function is_available_settings($form, &$form_state, $module_name = 'is_available
 	build_form_setting_buttons($form, $form_object, $int_sizeof_setting_options);
 
 	// // Wrap the ajax callback sections of thesettings form
-	build_form_wrappers($form, $form_object);
+	build_form_wrap_config_settings($form, $form_object);
 	
 	$array_entity_types = get_checkboxes_value($form_state, 'entity_type');
 	
@@ -43,7 +43,7 @@ function is_available_settings($form, &$form_state, $module_name = 'is_available
 	// Form has 8 steps
 	$array_form_stage = array(
 		'is_at_entity_type'			=> is_at_entity_type($form_object, $array_fsne), 
-		'is_at_resource_type' 			=> is_at_resource_type($form_object, $array_fsne),
+		'is_at_resource_type' 	=> is_at_resource_type($form_object, $array_fsne),
 		'is_at_brn_table'				=> is_at_brn_table($form_object, $array_fsne), 
 		'is_at_auth_buildings'	=> is_at_auth_buildings($form_object, $array_fsne),
 		'is_at_content_type'		=> is_at_content_type($form_object, $array_fsne),
@@ -69,18 +69,20 @@ function is_available_settings($form, &$form_state, $module_name = 'is_available
 		if ($array_form_stage['is_at_brn_table']) {
 			$bool_selected_brn_table = has_selected_brn_table($form_state['values']);
 			build_form_config_auth_buildings($form, $form_state, $form_object, $nth_setting, $array_resource_types, $bool_selected_brn_table);
-		}
+/* 		}
 		
 		if ($array_form_stage['is_at_auth_buildings']) {
 			$checked_auth_buildings = get_checked_auth_buildings($form_state, $form_object, $checked_et_rt, $nth_setting);
-			$bool_has_checked_auth_bldgs = has_checked_for_each_rt($checked_auth_buildings);
+			$bool_has_checked_auth_bldgs = has_checked_for_each_rt($checked_auth_buildings); */
 			build_form_config_content_types($form, 
-				$form_state, $form_object, $nth_setting, $array_resource_types, $bool_has_checked_auth_bldgs);
+				$form_state, $form_object, $nth_setting, $array_resource_types); //, $bool_has_checked_auth_bldgs);
 		}
 		
 		
 		if ($array_form_stage['is_at_content_type']) {
-			build_form_config_entref($form, $form_state, $form_object, $nth_setting, $array_resource_types);
+			$checked_auth_buildings = get_checked_auth_buildings($form_state, $form_object, $checked_et_rt, $nth_setting);
+			$bool_has_checked_auth_bldgs = has_checked_for_each_rt($checked_auth_buildings);
+			build_form_config_entref($form, $form_state, $form_object, $nth_setting, $array_resource_types, $bool_has_checked_auth_bldgs);
 		}
 	
 		if ($array_form_stage['is_at_entref']) {
@@ -93,6 +95,9 @@ function is_available_settings($form, &$form_state, $module_name = 'is_available
 			build_sys_settings($form, $bool_selected_date);
 		}
 	} 
+	
+	//dpm("FORM VALUE");
+	//dpm($form_state['values']);
 	// system_settings_form($form) is taken care of in build_sys_settings
 	return $form; 
 }
@@ -116,6 +121,15 @@ function build_form_setting_options(&$form, $form_object) {
 	$key_setting_options = $form_object->get_key_setting_options();
 	$array_settings_options = $form_object->get_settings_options();
 
+	$form['notes'] = array(
+		 '#markup' => '<b><p>How to use this form <p>' .
+			'<p> 1) Proceed downwards through the 7 steps of 
+			the form until the "Save Configuration" button appears.</p>
+			<p> 2) To change a value from a preceding stage, reload the 
+			form by clicking on "Configure Setting."</p>
+			<p> 3) Settings are not saved until "Save Configuration" is clicked.</p>',
+	);
+	
 	$form[$key_setting_options]  = array(
 		'#type' => 'radios',
 		'#title' => convert_to_readable_name($key_setting_options),
@@ -182,6 +196,7 @@ function build_fsc_original_title(&$form, $form_object, $nth_setting) {
 	$module_name = $form_object->get_module_name();
 	$key_config_settings = $form_object->get_key_config_settings();
 	$key_setting_options = $form_object->get_key_setting_options();
+	$key_config_resource_type = $form_object->get_key_config_resource_type();
 	
 	$form[$key_config_settings][append_nth('original_title', $nth_setting)] = 
 		array(
@@ -258,66 +273,67 @@ function build_form_crt_checkboxes(&$form, $form_state,
 		$form[$key_config_resource_type]['resource_type'] = array(
 			'#markup' => '<p>Please select an entity type for searching.</p>'
 		);
+		$array_entity_types = get_checkboxes_value($form_state, 'entity_type');
+		build_fsc_select_entity_type_button($form, $form_state, $form_object, $array_entity_types, $key_config_resource_type);
 		return 0;
-	} else {
-		// Build resource checkboxes
-		$string_start = append_nth('entity_type', $nth_setting); // plus _space
-		
-		$string_start_length = (strlen($string_start) + 1);
-		$form[$key_config_resource_type]['resource_type'] = array(
-			'#markup' => '<p><b>Selected entity types: ',
-		);
-		$markup = &$form[$key_config_resource_type]['resource_type']['#markup'];
-		
-		foreach ($array_entity_types as $et => $value) {
-			if ($value == 1) { // Only for checked-off entities
-				$entity_type = substr($et, $string_start_length);
-				
-				$readable_et = convert_to_readable_name(substr($et, $string_start_length));
-				$array_resource_types = get_entity_type_resource_types($entity_type);
-				$markup .= $readable_et . ', ';
-				
-				if (sizeof($array_resource_types) == 0) {
-					$form[$key_config_resource_type][$et . '_resource_type'] = array(
-						'#markup' => 'Sorry, no searchable resource types available for entity type ' . $readable_et .
-							'. Please check the configurations for ' . $readable_et . '.',
+	}
+	// Build resource checkboxes
+	$string_start = append_nth('entity_type', $nth_setting); // plus _space
+	
+	$string_start_length = (strlen($string_start) + 1);
+	$form[$key_config_resource_type]['resource_type'] = array(
+		'#markup' => '<p><b>Selected entity types: ',
+	);
+	$markup = &$form[$key_config_resource_type]['resource_type']['#markup'];
+	
+	foreach ($array_entity_types as $et => $value) {
+		if ($value == 1) { // Only for checked-off entities
+			$entity_type = substr($et, $string_start_length);
+			
+			$readable_et = convert_to_readable_name(substr($et, $string_start_length));
+			$array_resource_types = get_entity_type_resource_types($entity_type);
+			$markup .= $readable_et . ', ';
+			
+			if (sizeof($array_resource_types) == 0) {
+				$form[$key_config_resource_type][$et . '_resource_type'] = array(
+					'#markup' => 'Sorry, no searchable resource types available for entity type ' . $readable_et .
+						'. Please check the configurations for ' . $readable_et . '.',
+				);
+			} else {
+				$form[$key_config_resource_type][$et . '_resource_type'] = array(
+					'#type' => 'fieldset',
+					'#title' => $readable_et . ' Resource Types',
+				);
+				foreach ($array_resource_types as $machine_name => $label) {
+	
+					$form[$key_config_resource_type][$et . '_resource_type']
+						[append_nth('resource_type', $nth_setting) . '_' . $entity_type . '_' . $machine_name] = array(
+							'#type' => 'checkbox',
+							'#title' => $label,
+							'#default_value' => 
+								variable_get(append_nth('resource_type', $nth_setting) . '_' . $entity_type . '_' . $machine_name, 1),	
 					);
-				} else {
-					$form[$key_config_resource_type][$et . '_resource_type'] = array(
-						'#type' => 'fieldset',
-						'#title' => $readable_et . ' Resource Types',
-					);
-					foreach ($array_resource_types as $machine_name => $label) {
-		
-						$form[$key_config_resource_type][$et . '_resource_type']
-							[append_nth('resource_type', $nth_setting) . '_' . $entity_type . '_' . $machine_name] = array(
-								'#type' => 'checkbox',
-								'#title' => $label,
-								'#default_value' => 
-									variable_get(append_nth('resource_type', $nth_setting) . '_' . $entity_type . '_' . $machine_name, 1),	
-						);
-					}
 				}
 			}
 		}
-		$markup = substr($markup, 0, -2) . '</b></p>'; // trim off last ', '.
-		return 1;
 	}
+	$markup = substr($markup, 0, -2) . '</b></p>'; // trim off last ', '.
+	return 1;
 }
 
 function build_form_config_building_table(&$form, $form_state, $form_object, $nth_setting, $checked_et_rt, $bool_checked_rt) {
-	
 	if (!$bool_checked_rt) {
-		$form[$form_object->get_key_config_building()]['error'] = array(
+		$key_building = $form_object->get_key_config_building();
+		$form[$key_building]['error'] = array(
 			'#markup' => 'Please select at least one resource type for each entity type.',
 		);
+		build_form_crt_select_button($form, $form_object, $key_building);
 		return array();
-	} else {
-	
+	}
 	$array_resource_type = build_form_building_options($form, $form_object, $nth_setting, $checked_et_rt); /// $array_et_rt);
 	build_form_building_button($form, $form_object);
 	return $array_resource_type;
-	}
+	
 }
 
 function build_form_building_options(&$form, $form_object, $nth_setting, $checked_et_rt) { 
@@ -366,7 +382,7 @@ function build_form_building_options(&$form, $form_object, $nth_setting, $checke
 					'#type' => 'radios', 
 					'#title' => 'Select the building table for ' . $readable_et . ', ' . $readable_rt,
 					'#options' => $building_resource_number_options,
-					'#default_value' => variable_get($bldg_table, key($building_resource_number_options)),
+					'#default_value' => variable_get($bldg_table, key($building_resource_number_options)), 
 				);
 				
 				// is_available_resource_number_table_1_space_meeting_resource
@@ -399,6 +415,7 @@ function build_form_config_auth_buildings(&$form, $form_state, $form_object, $nt
 			'#markup' => '<p>Please select the 
 				building and resource number tables for each of the content types :: resource type combinations.</p>',
 		);
+		build_form_building_button($form, $form_object, $key_auth_bldg);
 		return;
 	}
 	
@@ -410,8 +427,10 @@ function build_form_config_auth_buildings(&$form, $form_state, $form_object, $nt
 	}
 
 	//	The stored field_building and rn values:
-	// $form_state['values'][is_available_resource_type_1_space_meeting_resource_building_table] = field_building
-	// $form_state['values'][is_available_resource_type_1_space_meeting_resource_resource_number_table] = field_resource_number
+	// $form_state['values']
+	//		[is_available_resource_type_1_space_meeting_resource_building_table] = field_building
+	// $form_state['values']
+	//		[is_available_resource_type_1_space_meeting_resource_resource_number_table] = field_resource_number
 	foreach ($array_resource_types as $rt_machine_name => $object) {
 		$entity_type			= $object->get_entity_type();
 		$et_label 				= $entity_type->get_name();
@@ -446,21 +465,13 @@ function build_form_config_auth_buildings(&$form, $form_state, $form_object, $nt
 			);
 		}
 	}		
-	build_auth_buildings_button($form, $form_object);
 }
 
-function build_form_config_content_types(&$form, $form_state, $form_object, $nth_setting, &$array_resource_types,
-	$bool_has_checked_auth_bldgs) {
-	$key_content 	= $form_object->get_key_config_content();
+function build_form_config_content_types(&$form, $form_state, $form_object, $nth_setting, &$array_resource_types) {
+//	$bool_has_checked_auth_bldgs) {
+	$key_content 	= $form_object->get_key_config_auth_buildings(); //$form_object->get_key_config_content();
 	$key_ct 			= $form_object->get_key_content_type();
 	// form stage control done outside
-	
-	if (!$bool_has_checked_auth_bldgs) {
-		$form[$key_content]['error'] = array(
-			'#markup' => 'Please select at least one building for each resource type.'
-		);
-		return;
-	}
 	
 	foreach ($array_resource_types as $rt_machine_name => $object) {
 		$entity_type			= $object->get_entity_type();
@@ -492,11 +503,19 @@ function build_form_config_content_types(&$form, $form_state, $form_object, $nth
 }
 
 
-function build_form_config_entref(&$form, $form_state, $form_object, $nth_setting, $array_resource_types) {
+function build_form_config_entref(&$form, $form_state, $form_object, $nth_setting, $array_resource_types, $bool_has_checked_auth_bldgs) {
 	$key_config_entref				= $form_object->get_key_config_entref();
 	$key_ct										= $form_object->get_key_content_type();
 	$key_entref								= $form_object->get_key_entref();
 	$bool_build_entref_button = TRUE;
+	
+ 	if (!$bool_has_checked_auth_bldgs) {
+		$form[$key_config_entref][$et_rt] = array(
+			'#markup' => 'Please select at least one building for each resource type.'
+		);
+		build_content_types_button($form, $form_object, $key_config_entref);
+		return;
+	} 
 	
 	// Empty (no content type selected) condition handled in foreach
 	foreach ($array_resource_types as $rt_machine_name => $object) {
@@ -515,6 +534,7 @@ function build_form_config_entref(&$form, $form_state, $form_object, $nth_settin
 			$form[$key_config_entref][$et_rt] = array(
 				'#markup' => 'Please select at least one content type for ' . $et_label . ': ' . $rt_label.' <br><br>'
 			);
+			build_content_types_button($form, $form_object, $key_config_entref);
 		} else {
 			$form[$key_config_entref][$key_et_rt] = array(
 				'#type' => 'fieldset',
@@ -547,11 +567,12 @@ function build_form_config_entref(&$form, $form_state, $form_object, $nth_settin
 
 function build_form_config_date(&$form, $form_state, $form_object, $nth_setting, $array_resource_types, $bool_has_selected_entref) {
 	$key_date = $form_object->get_key_config_date();
-	
+	$key_entref	= $form_object->get_key_entref();
 	if (!$bool_has_selected_entref) {
 		$form[$key_date]['no_entref'] = array(
 			'#markup' => 'Please select an entity reference table for each resource type :: content type combination.'
 		);
+		build_entref_button($form, $form_object, true, $key_date);
 		return;
 	}
 
@@ -690,9 +711,10 @@ function build_form_delete_setting_button(&$form, $form_object) {
 
 
 // $array_entity_types = all the entity types displayed in the checkboxes
-function build_fsc_select_entity_type_button(&$form, $form_state, $form_object, $array_entity_types) {
+function build_fsc_select_entity_type_button(&$form, $form_state, $form_object, $array_entity_types, $key_config_settings) {
 	$module_name = $form_object->get_module_name();
-	$key_config_settings = $form_object->get_key_config_settings();
+	if ($key_config_settings  == "") 
+		$key_config_settings = $form_object->get_key_config_settings();
 	$key_config_content 	= $form_object->get_key_config_content();
 	$resource_type_wrapper = $form_object->get_wrapper_resource_type();
 	$content_config_wrapper = $form_object->get_wrapper_content();
@@ -709,13 +731,14 @@ function build_fsc_select_entity_type_button(&$form, $form_state, $form_object, 
 			'method' => 'replace',
 			'effect' => 'fade',
 		),
-		'#prefix' => '<div class="' . $content_config_wrapper . '-button">',
+		'#prefix' => '<div id="' . $resource_type_wrapper . '">',
 		'#suffix' => '</div>',
-	);
+	);	
 }
 
-function build_form_crt_select_button(&$form, $form_object) {
-	$key_config_resource_type = $form_object->get_key_config_resource_type();
+function build_form_crt_select_button(&$form, $form_object, $key_config_resource_type = "") {
+	if ($key_config_resource_type == "")	
+		$key_config_resource_type = $form_object->get_key_config_resource_type();
 	$building_wrapper = $form_object->get_wrapper_building();
 	$resource_type_wrapper = $form_object->get_wrapper_resource_type();
 	
@@ -731,13 +754,13 @@ function build_form_crt_select_button(&$form, $form_object) {
 			'method' => 'replace',
 			'effect' => 'fade',
 		),
-		'#prefix' => '<div class="' . $resource_type_wrapper . '-button">',
+		'#prefix' => '<div id="' . $building_wrapper . '">',
 		'#suffix' => '</div>',
 	);
 }
 
-function build_form_building_button(&$form, $form_object) {
-	$key_building = $form_object->get_key_config_building();
+function build_form_building_button(&$form, $form_object, $key_building = "") {
+	if ($key_building == "") $key_building = $form_object->get_key_config_building();
 	$building_wrapper = $form_object->get_wrapper_building();
 	$auth_bldg_wrapper = $form_object->get_wrapper_auth_buildings();
 	
@@ -753,35 +776,14 @@ function build_form_building_button(&$form, $form_object) {
 			'method' => 'replace',
 			'effect' => 'fade',
 		),
-		'#prefix' => '<div class="' . $building_wrapper . '-button">',
+		'#prefix' => '<div id="' . $auth_bldg_wrapper . '">',
 		'#suffix' => '</div>',
 	);
 }
 
-function build_auth_buildings_button(&$form, $form_object) {
-	$key_auth_bldg = $form_object->get_key_config_auth_buildings();
-	$auth_bldg_wrapper = $form_object->get_wrapper_auth_buildings();
-	$content_wrapper = $form_object->get_wrapper_content();
-	
-	$form[$key_auth_bldg]['auth_building_button'] = array(
-		'#type' => 'button',
-		'#value' => t('Select buildings'),
-		'#button_type' => 'submit ajax-trigger',
-		'#ajax' => array(
-			'submitter' => FALSE,
-			'callback' => 'ajax_select_auth_building_callback',
-			'event' => 'mousedown',
-			'wrapper' => $content_wrapper,
-			'method' => 'replace',
-			'effect' => 'fade',
-		),
-		'#prefix' => '<div class="' . $auth_bldg_wrapper . '-button">',
-		'#suffix' => '</div>',
-	);
-}
- 
-function build_content_types_button(&$form, $form_object) {
-	$key_content = $form_object->get_key_config_content();
+function build_content_types_button(&$form, $form_object, $key_content) {
+	if ($key_content == "")	
+		$key_content = $form_object->get_key_config_auth_buildings(); 
 	$entref_wrapper = $form_object->get_wrapper_entref();
 	$content_wrapper = $form_object->get_wrapper_content();
 	
@@ -797,13 +799,13 @@ function build_content_types_button(&$form, $form_object) {
 			'method' => 'replace',
 			'effect' => 'fade',
 		),
-		'#prefix' => '<div class="' . $content_wrapper . '-button">',
+		'#prefix' => '<div id="' . $entref_wrapper . '">',
 		'#suffix' => '</div>',
 	);
 } 
 
-function build_entref_button(&$form, $form_object, $bool_build_entref_button) {
-	$key_entref = $form_object->get_key_config_entref();
+function build_entref_button(&$form, $form_object, $bool_build_entref_button, $key_entref = "") {
+	if ($key_entref == "") $key_entref = $form_object->get_key_config_entref();
 	
 	if (!$bool_build_entref_button) {
 		$form[$key_entref]['not_all_has_ct'] = array(
@@ -827,7 +829,7 @@ function build_entref_button(&$form, $form_object, $bool_build_entref_button) {
 			'method' => 'replace',
 			'effect' => 'fade',
 		),
-		'#prefix' => '<div class="' . $entref_wrapper . '-button">',
+		'#prefix' => '<div id="' . $date_wrapper . '">',
 		'#suffix' => '</div>',
 	);
 }
@@ -849,7 +851,7 @@ function build_date_button(&$form, $form_object) {
 			'method' => 'replace',
 			'effect' => 'fade',
 		),
-		'#prefix' => '<div class="' . $date_wrapper . '-button">',
+		'#prefix' => '<div id="' . $save_config_wrapper . '">',
 		'#suffix' => '</div>',
 	);
 }
@@ -867,16 +869,6 @@ function build_date_button(&$form, $form_object) {
  * @param $form	The form to build
  * @param $form_object
  */
-function build_form_wrappers(&$form, $form_object) {
-	build_form_wrap_config_settings($form, $form_object);
-	build_form_wrap_resource_type($form, $form_object);
-	build_form_wrap_building($form, $form_object);
-	build_form_wrap_auth_buildings($form, $form_object);
-	build_form_wrap_content_types($form, $form_object);
-	build_form_wrap_entref($form, $form_object);
-	build_form_wrap_date($form, $form_object);
-	build_form_wrap_save_config($form, $form_object);
-}
  
 /**
  * array IsAvailableAdminSettingsForm -> (void)
@@ -892,72 +884,6 @@ function build_form_wrap_config_settings(&$form, $form_object) {
 
 	$form[$key_config_settings] = array(
 		'#prefix' => '<div id="' . $setting_config_wrapper . '">',
-		'#suffix' => '</div>',
-	);
-}
-
-function build_form_wrap_resource_type(&$form, $form_object) {
-	$key_config_resource_type = $form_object->get_key_config_resource_type();
-	$resource_type_wrapper = $form_object->get_wrapper_resource_type();
-	
-	// Wrap the form
-	$form[$key_config_resource_type] = array(
-		'#prefix' => '<div id="' . $resource_type_wrapper . '">',
-		'#suffix' => '</div>',
-	);
-}
-
-function build_form_wrap_building(&$form, $form_object) {
-	$key_building = $form_object->get_key_config_building();
-	$building_wrapper = $form_object->get_wrapper_building();
-	
-	$form[$key_building] = array(
-		'#prefix' => '<div id="' . $building_wrapper . '">',
-		'#suffix' => '</div>',
-	);
-}
-
-function build_form_wrap_auth_buildings(&$form, $form_object) {
-	$key_auth_bldg = $form_object->get_key_config_auth_buildings();
-	$auth_bldg_wrapper = $form_object->get_wrapper_auth_buildings();
-	
-	$form[$key_auth_bldg] = array(
-		'#prefix' => '<div id="' . $auth_bldg_wrapper . '">',
-		'#suffix' => '</div>',
-	);
-}
-
-function build_form_wrap_content_types(&$form, $form_object) {
-	$key_content_types = $form_object->get_key_config_content();
-	$content_types_wrapper = $form_object->get_wrapper_content();	
-		$form[$key_content_types] = array(
-		'#prefix' => '<div id="' . $content_types_wrapper . '">',
-		'#suffix' => '</div>',
-	);
-}
-function build_form_wrap_entref(&$form, $form_object) {
-	$entref_wrapper = $form_object->get_wrapper_entref();
-	$key_entref = $form_object->get_key_config_entref();
-	$form[$key_entref] = array(
-		'#prefix' => '<div id="' . $entref_wrapper . '">',
-		'#suffix' => '</div>',
-	);
-}
-
-function build_form_wrap_date(&$form, $form_object) {
-		$date_wrapper = $form_object->get_wrapper_date();
-		$key_date = $form_object->get_key_config_date();
-		$form[$key_date] = array(
-		'#prefix' => '<div id="' . $date_wrapper . '">',
-		'#suffix' => '</div>',
-	);
-}
-
-function build_form_wrap_save_config(&$form, $form_object) {
-		$save_config_wrapper = $form_object->get_wrapper_save_config();
-		$key_save_config = $form_object->get_key_save_config();
-		$form['actions'] = array(
-		'#prefix' => '<div id="' . $save_config_wrapper . '">',
 		'#suffix' => '</div>',
 	);
 }
