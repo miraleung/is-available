@@ -52,6 +52,10 @@ function vget_checked_auth_buildings($nth_setting) {
 	return vget_checked_names('is_available_auth_building_' . $nth_setting . '_');
 }
 
+function vget_checked_content_types($nth_setting) {
+	return vget_checked_names('is_available_content_type_%' . $nth_setting . '_');
+}
+
 function vget_checked_names($term) {
 	$ret_array = array();
 	$mysql_query = "SELECT name FROM variable WHERE name LIKE '" . $term . "%'";
@@ -68,6 +72,239 @@ function vget_checked_names($term) {
  * CLASSES
  * ===========================================
  */
+ 
+/**
+ * Builds up the display for a given setting
+ */
+class IsAvailableSettingDisplay {
+
+	private $SPACE = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp';
+	function get_space() { return $this->SPACE; }
+
+	function get_setting_display_string($nth_setting, $title) {
+		
+		$result_string = '<b><i style="text-transform: uppercase">Saved settings for ' . $title . ':</i></b><br>';
+		if (!$this->check_if_setting_exists($nth_setting)) 
+			return $result_string . 
+				"<i><p>There aren't any settings yet for $title. 
+				Please complete this form and save your settings.</p></i>";
+		
+		$array_entity_types = $this->display_entity_types($nth_setting);
+		if ($this->check_if_empty($array_entity_types, 'entity types', $title)) return;
+		
+		$entity_types = reset($array_entity_types);
+		$array_et_rt = $this->display_resource_types_get_array($nth_setting, $entity_types);	
+		if ($this->check_if_empty($array_et_rt, 'resource types', $title)) return;
+		
+		$str_rt = $this->display_resource_types($nth_setting, $array_et_rt);
+		$str_bldg_rn_table = $this->display_building_room_number_table($nth_setting, $array_et_rt);
+		$str_auth_bldgs = $this->display_auth_buildings($nth_setting, $array_et_rt);
+		
+		$str_ct_settings = $this->display_content_types_settings($nth_setting, $array_et_rt);
+		
+		$result_attrs = array(
+			'entity types' => key($array_entity_types),
+			'resource types' => $str_rt,
+			'building and room number tables' => $str_bldg_rn_table,
+			'searchable buildings' => $str_auth_bldgs,
+			'content type configuration' => $str_ct_settings,
+		);
+		
+		foreach ($result_attrs as $key => $str) {
+			$type = convert_to_readable_name($key);
+			if (empty($str)) $this->set_error_message($key, $title);
+			else $result_string .= "<b>$type</b>: $str <br><br>";
+		}		
+		return $result_string;
+	}
+	
+	private function check_if_setting_exists($nth) {
+		$query = db_query("SELECT count(name) as cnt FROM variable WHERE 
+			name LIKE 'is_available%$nth%'");
+		$count = 0;
+		foreach ($query as $q) {
+			$count = $q->cnt;
+		}
+		return $count > 8;
+	}
+	
+	private function display_entity_types($nth_setting) {
+		$array = vget_checked_entity_types($nth_setting);
+		$ret_array = array();
+		$space = $this->get_space();
+		if (empty($array)) return "";
+		$ret_string = "<br>$space";
+		$len = strlen("is_available_entity_type_" . $nth_setting . "_");
+		foreach ($array as $a) {
+			$et_name = substr($a, $len);
+			$ret_string .= convert_to_readable_name($et_name) . ", ";
+			array_push($ret_array, $et_name);
+		}
+		$ret_string = substr($ret_string, 0, -2); // remove last ", "
+		return array($ret_string => $ret_array);
+	}
+	
+	private function display_resource_types_get_array($nth, $array_et) {
+		$ret_array = array();
+		foreach ($array_et as $et_name) {
+			$array_rt = array(); 
+			foreach (vget_checked_room_types($nth, $et_name) as  $rt_name) {
+				$len = strlen("is_available_resource_type_" . $nth . "_") + strlen($et_name) + 1;
+				$rt_name = substr($rt_name, $len);
+				$array_rt[$rt_name] = $rt_name;
+			}
+			$ret_array[$et_name] = $array_rt;
+		}
+		return $ret_array;
+	}
+	
+	private function display_resource_types($nth, $array_et_rt) {
+		$ret_str = "";
+		$space = $this->get_space();
+		foreach ($array_et_rt as $et_name => $array_rt) {
+			$et_name = convert_to_readable_name($et_name);
+			$ret_str .= (empty($array_rt)) ? "" : "<br>$space <i>$et_name:</i> ";
+			foreach ($array_rt as $rt_name) {
+				$rt_name = convert_to_readable_name($rt_name);
+				$ret_str .= "$rt_name, ";
+			}
+			$ret_str = substr($ret_str, 0, -2); // trim off last ", "
+		}
+		return $ret_str;
+	}
+	
+	private function display_building_room_number_table($nth, $array_et_rt) {
+		$ret_str = "";
+		$none = "(none set)";
+		$space = $this->get_space();
+		$db_bldg_table_start = "is_available_building_table_" . $nth . "_";
+		$db_rn_table_start = "is_available_resource_number_table_" . $nth . "_";
+		foreach ($array_et_rt as $et_name => $array_rt) {
+			foreach ($array_rt as $rt_name) {
+				$db_bldg_term = $db_bldg_table_start . $et_name . "_" . $rt_name;
+				$db_rn_term = $db_rn_table_start . $et_name . "_" . $rt_name;
+				$readable_et_name = convert_to_readable_name($et_name);
+				$readable_rt_name = convert_to_readable_name($rt_name);
+				$bldg_table = variable_get($db_bldg_term, "");
+				$rn_table = variable_get($db_rn_term, "");
+				if (empty($bldg_table) || empty($rn_table)) {
+					if (empty($bldg_table)) {
+						$this->set_error_message("building table", "$readable_et_name $readable_rt_name");
+						$bldg_str .= $none;
+					}
+					if (empty($rn_table)) {
+						$this->set_error_message("room number table", "$readable_et_name: $readable_rt_name");
+						$rn_str .= $none;
+					}
+					$ret_str .= $bldg_str . $rn_str;
+				} else {
+					$bldg_str = "<br>$space <i>Building table for $readable_et_name -> $readable_rt_name:</i> $bldg_table";
+					$rn_str = "<br>$space <i>Room number table for $readable_et_name -> $readable_rt_name:</i> $rn_table";
+					$ret_str .= $bldg_str . $rn_str;
+				}		
+			}
+		}
+		return $ret_str;
+	}
+	
+	private function display_auth_buildings($nth, $array_et_rt) {
+		$ret_str = "";
+		$none = "(none set)";
+		$space = $this->get_space();
+		$auth_bldg_start = "is_available_auth_building_" . $nth . "_";
+		$raw_auth_bldgs_ra = vget_checked_auth_buildings($nth);
+		foreach ($array_et_rt as $et_name => $array_rt) {
+			foreach ($array_rt as $rt_name) {
+				$db_ab_term_start = $auth_bldg_start . $et_name . "_" . $rt_name . "_";
+				$len = strlen($db_ab_term_start);
+				$readable_et_name = convert_to_readable_name($et_name);
+				$readable_rt_name = convert_to_readable_name($rt_name);
+				$ab_str = "<br>$space <i>$readable_et_name -> $readable_rt_name: </i>";
+				$auth_bldgs = "";
+				foreach ($raw_auth_bldgs_ra as $key => $raw_str) {
+					if (substr($raw_str, 0, $len) === $db_ab_term_start && 
+						variable_get($raw_str, 0) == 1) {
+						$auth_bldgs .= substr($raw_str, $len) . ", ";
+						unset($raw_auth_bldgs_ra[$key]);
+					}
+				}
+				if (empty($auth_bldgs)) {
+					$this->set_error_message("searchable buildings", "readable_$et_name -> $readable_rt_name");
+					$ab_str .= $none;
+				}
+				else $ret_str .= $ab_str . substr($auth_bldgs, 0, -2); // trim off last ", "
+			}
+		}
+		return $ret_str;
+	}
+	
+	private function display_content_types_settings($nth, $array_et_rt) {
+		$ret_str = "";
+		$none = "(none set)";
+		$space = $this->get_space();
+		$modname = "is_available";
+		$ct_start = $modname . "_content_type_";
+		$entref_start = $modname . "_entref_";
+		$date_start = $modname . "_date_";
+		$raw_ct_ra = vget_checked_content_types($nth);
+		foreach ($array_et_rt as $et_name => $array_rt) {
+			foreach ($array_rt as $rt_name) {
+				$readable_et_name = convert_to_readable_name($et_name);
+				$readable_rt_name = convert_to_readable_name($rt_name);
+				$ct_str_result = "<br>$space <i>$readable_et_name -> $readable_rt_name:</i> ";
+				$db_ct_term_start = $ct_start . $et_name . "_" . $rt_name . "_" . $nth . "_";
+				$ct_len = strlen($db_ct_term_start);
+				$etrt = $et_name . "_" . $rt_name . "_";
+				$ctstr = "<br>$space$space <i>Content type:</i> "; 
+				$entref_str = "<br>$space$space <i>Entity reference table:</i> "; 
+				$date_str = "<br>$space$space <i>Date table:</i> ";
+				$cts = ""; $entref = ""; $date = "";
+				$ct_name = "";
+				foreach ($raw_ct_ra as $key => $raw_str) {
+					if (substr($raw_str, 0, $ct_len) === $db_ct_term_start && 
+						variable_get($raw_str, 0) == 1) {
+						$ct_name = substr($raw_str, $ct_len);
+						$db_entref_term = $entref_start . $etrt  . $ct_name . "_" . $nth;
+						$db_date_term = $date_start . $etrt . $nth . "_" . $ct_name;
+						$cts .= convert_to_readable_name($ct_name);
+						$entref .= variable_get($db_entref_term, "");
+						$date .= variable_get($db_date_term, "");
+						unset($raw_ct_ra[$key]);
+					}
+				}
+			
+				if (empty($cts)) {
+					$this->set_error_message("content types", "$readable_et_name -> $readable_rt_name");
+					$ctstr .= $none;
+				} else $ctstr .= $cts; 
+				if (empty($entref)) {
+					$this->set_error_message("entity reference table", "$readable_et_name -> $readable_rt_name: $ct_name");
+					$entref_str .= $none;
+				} else $entref_str .= $entref; 
+				if (empty($date)) {
+					$this->set_error_message("date table", "$et_name: $rt_name -> $ct_name");
+					$date_str .= $none;
+				} else $date_str .= $date; 
+				$ret_str .= $ct_str_result . $ctstr . $entref_str . $date_str;
+			}
+		}
+		return $ret_str;
+	}
+	
+	private function check_if_empty($array, $name, $title) {
+		if (empty($array)) {
+			$this->set_error_message($name, $title);
+			return true;
+		}
+		return false;
+	}
+	
+	private function set_error_message($name, $title) {
+		drupal_set_message("No selected $name for $title found. Please check your settings.", "error");
+	}
+	
+}
+
 
 /**
  * Groups together the queries needed for the nested resource search query.
@@ -115,6 +352,7 @@ class IsAvailableAdminSettingsForm {
 	private $KEY_ENTITY_TYPES 		= 'entity_types';
 
 	private $KEY_SETTINGS 				= 'setting';
+	private $KEY_DISPLAY					= 'setting_display';
 	private $KEY_ADD_SETTING 			= 'add_setting';
 	private $KEY_DEL_SETTING			= 'delete_setting';
 	private $KEY_RESOURCE_TYPE		= 'resource_type';
@@ -154,7 +392,7 @@ class IsAvailableAdminSettingsForm {
 		if ($j == 0) {
 			$name = variable_get($this->get_module_name() . '_settings_title_a', "");
 			if ($name == "") {
-				$name = 'Setting A (unconfigured)';
+				$name = 'Setting 1 (unconfigured)';
 				variable_set($this->get_module_name() . '_settings_title_a', $name);
 			}
 			$array_return = array('a' => $name);
@@ -193,6 +431,7 @@ class IsAvailableAdminSettingsForm {
 	function get_key_button()						{ return $this->KEY_BUTTON; }
 	
 	function get_key_config_settings() 				{ return $this->get_configure_key($this->KEY_SETTINGS); }
+	function get_key_display_setting()				{ return $this->KEY_DISPLAY; }
 	function get_key_config_resource_type()		{ return $this->get_configure_key($this->KEY_RESOURCE_TYPE); }
 	function get_key_config_building() 				{ return $this->get_configure_key($this->KEY_BUILDING); }
 	function get_key_config_resource_number()	{ return $this->get_configure_key($this->KEY_RESOURCE_NUMBER); }
@@ -203,6 +442,7 @@ class IsAvailableAdminSettingsForm {
 	function get_key_save_config()			{ return $this->KEY_SAVE_CONFIG; }
 	
 	function get_wrapper_settings() 		{ return $this->get_wrapper($this->KEY_SETTINGS); }
+	function get_wrapper_setting_display() { return str_replace('_', '-', $this->KEY_DISPLAY); }
 	function get_wrapper_add_setting()	{ return str_replace('_', '-', $this->KEY_ADD_SETTING); }
 	function get_wrapper_delete_setting()		{ return str_replace('_', '-', $this->KEY_DEL_SETTING); }
 	function get_wrapper_resource_type() 		{ return $this->get_wrapper($this->KEY_RESOURCE_TYPE); }

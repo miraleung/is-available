@@ -1,3 +1,41 @@
+/* CSS for admin settings form */
+#setting-display {
+	width: 50%;
+	float: right;
+	border-style: ridge;
+	border-width: 1px;
+	border-color: silver;
+	padding-left: 20px;
+	display: block;
+	clear: right;
+}
+
+.form-item.form-type-radios.form-item-settings-options{
+	width: 25%;
+	float: left;
+	display: block;
+}
+
+#configure-setting-button {
+	width: 40%;
+	float: left;
+}
+#add-setting-button {
+	width: 12%;
+	float: left;
+	margin-right: 65px;
+}
+#delete-setting-button {
+	width: 12%;
+	float: left;
+	display: inline-block;
+}
+
+#config-settings-header {
+	clear: both;
+	display: inline-block;
+}
+
 /* CSS for room search form */
 
 /* Building field */
