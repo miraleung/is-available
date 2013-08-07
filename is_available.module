@@ -30,9 +30,18 @@ function is_available_menu() {
 	
 	$module_name = 'is_available';
 
+	$items['admin/config/is_available'] = array(
+		'title' => t('Is Available Configuration'),
+		'description' => t('Configure block settings for Is Available'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('is_available_settings', $module_name),
+		'access arguments' => array('administer is_available'),
+		'file' => 'is_available.admin.inc',
+	);
+	
 	$items['admin/config/is_available/settings'] = array(
-		'title' => t('Is Available Block Settings'),
-		'description' => t('Create a block display setting'),
+		'title' => t('Block Setting Configuration'),
+		'description' => t('Create or configure a block display setting'),
 		'page callback' => 'drupal_get_form',
 		'page arguments' => array('is_available_settings', $module_name),
 		'access arguments' => array('administer is_available'),

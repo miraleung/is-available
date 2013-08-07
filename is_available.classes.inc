@@ -353,6 +353,7 @@ class IsAvailableAdminSettingsForm {
 
 	private $KEY_SETTINGS 				= 'setting';
 	private $KEY_DISPLAY					= 'setting_display';
+	private $KEY_TITLE_ET					= 'title_entity_type';
 	private $KEY_ADD_SETTING 			= 'add_setting';
 	private $KEY_DEL_SETTING			= 'delete_setting';
 	private $KEY_RESOURCE_TYPE		= 'resource_type';
@@ -379,6 +380,7 @@ class IsAvailableAdminSettingsForm {
 	private $KEY_BRN_TABLE 				= 'brn_table';
 	private $KEY_ENTITY_TYPE			= 'entity_type';
 	private $ALPHABET							= '123456789';
+	private $OPTIONS_WRAPPER			= 'setting-options';
 	
 	/**
 	 * Get the configurable setting options for the admin form
@@ -442,7 +444,9 @@ class IsAvailableAdminSettingsForm {
 	function get_key_save_config()			{ return $this->KEY_SAVE_CONFIG; }
 	
 	function get_wrapper_settings() 		{ return $this->get_wrapper($this->KEY_SETTINGS); }
+	function get_wrapper_options()			{ return $this->OPTIONS_WRAPPER; }
 	function get_wrapper_setting_display() { return str_replace('_', '-', $this->KEY_DISPLAY); }
+	function get_wrapper_title()				{ return $this->get_wrapper($this->KEY_TITLE_ET); }
 	function get_wrapper_add_setting()	{ return str_replace('_', '-', $this->KEY_ADD_SETTING); }
 	function get_wrapper_delete_setting()		{ return str_replace('_', '-', $this->KEY_DEL_SETTING); }
 	function get_wrapper_resource_type() 		{ return $this->get_wrapper($this->KEY_RESOURCE_TYPE); }
