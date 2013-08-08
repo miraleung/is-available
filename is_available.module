@@ -31,7 +31,7 @@ function is_available_menu() {
 	$module_name = 'is_available';
 
 	$items['admin/config/is_available'] = array(
-		'title' => t('Is Available Configuration'),
+		'title' => t('Is Available'),
 		'description' => t('Configure block settings for Is Available'),
 		'page callback' => 'drupal_get_form',
 		'page arguments' => array('is_available_settings', $module_name),
@@ -102,7 +102,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	
 	// // Time constants
 	date_default_timezone_set('America/Vancouver');
-	$date_format = 'Y-m-d H:i';
+	$date_format = 'Y-m-d h:i';
 	$current_time = date($date_format);
 	$current_time_rounded = round_to_nearest_15_minutes($current_time, 0, $date_format); 
 	$current_time_plus_hour = date($date_format, time() + 3600);

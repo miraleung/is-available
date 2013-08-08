@@ -54,7 +54,7 @@
 	margin: 0 0 20px 0;
 }
 
-/* Room type field*/
+/* Room type field */
 .room-type {
 	float: right;
 	width: 55%;
@@ -98,7 +98,7 @@ div.form-item.form-type-textfield.form-item-cal-popup-end-time {
 }
 
 span.timeEntry_wrap {
-	width: 60%;
+	width: 80%;
 }
 
 input.form-text.hasTimeEntry {

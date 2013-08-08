@@ -97,9 +97,10 @@ function is_available_settings($form, &$form_state, $module_name = 'is_available
 		}
 	} 
 	
-	// dpm("FORM VALUE");
+	dpm("FORM VALUE");
 	// dpm(variable_get('is_available_date_space_space_lab_1_lab', "null"));
-	// dpm($form_state['values']);
+	dpm($form_state['values']);
+	dpm($form);
 	// system_settings_form($form) is taken care of in build_sys_settings
 	return $form; 
 }
@@ -788,9 +789,14 @@ function build_fsc_select_entity_type_button(&$form, $form_state, $form_object, 
 		'#prefix' => '<div id="' . $resource_type_wrapper . '">',
 		'#suffix' => '</div>',
 	); */
- 	build_form_generic_ajax_button($form, $key_config_settings, 
-		$key_config_content,	t('Select entity types'), 
+	$key_config_resource_type = $form_object->get_key_config_resource_type();
+	 build_form_generic_ajax_button($form, $key_config_resource_type, 
+		'select-et-button',	t('Select entity types'), 
 		'ajax_select_entity_types_callback', $resource_type_wrapper, $resource_type_wrapper);
+			dpm($form);
+ 	// build_form_generic_ajax_button($form, $key_config_settings, 
+		// $key_config_content,	t('Select entity types'), 
+		// 'ajax_select_entity_types_callback', $resource_type_wrapper, $resource_type_wrapper);
 	// dpm($form[$key_config_settings]);
 }
 
