@@ -5,14 +5,45 @@ $(function () {
 		$('#edit-settings-options').after($('#add-setting-button'));
 		$('#edit-settings-options').after($('#configure-setting-button'));
 
+		$('.cal-popup-start').css('width', '100%');
+		$('.form-item-cal-popup-start').css('width','100%');
+		$("div[id^='edit-cal-popup-start']").css('width', '100%');
+		//$(".form-item-cal-popup-start-time > label").hide();
+		$('.cal-popup-end').css('width', '100%');
+		$('.form-item-cal-popup-end').css('width','100%');
+		$("div[id^='edit-cal-popup-end']").css('width', '100%');
+		//$(".form-item-cal-popup-end-time > label").hide();
 
 		/* Resource search form*/
 		$('input.form-text.hasTimeEntry').css('width', '100% !important');
+		var sTimeWrap = $(".form-item-cal-popup-start-time");
+		var eTimeWrap = $(".form-item-cal-popup-end-time");
+		sTimeWrap.find("input[id^='edit-cal-popup-start-']").attr('size', '7');
+		eTimeWrap.find("input[id^='edit-cal-popup-end-']").attr('size', '7');
+		eTimeWrap.parent().find('.description').hide();
 
+		// Hide date labels
 		$('.form-item-cal-popup-start-date > label').hide();
 		$('.form-item-cal-popup-start-date:first-child').css('margin-top', '2px');
 		$('.form-item-cal-popup-end-date > label').hide();
 		$('.form-item-cal-popup-end-date:first-child').css('margin-top', '2px');
+
+		// Resize the date/time fields
+		$('.form-item-cal-popup-start-time').each(function() {
+			$(this).parent().prev().attr("style", "width: 50%; margin-bottom: -2px;");
+			$(this).prev().find("input[name='cal_popup_start[date]']").attr("style", "height: 27px !important");
+			$(this).find("input[id^='edit-cal-popup-start-']").attr("style", "height: 28px !important");
+			$(this).parents().eq(3).next().find("input[class='hasDatePicker']").attr("style", "height: 27px !important");
+			$(this).parents().eq(3).next().find("input[name='cal_popup_end[time]']").attr("style", "height: 27px !important");
+			var region = $(this).parents().eq(9);
+			if (region.attr('class').substr(0, 21) == 'region region-sidebar') {
+					region.find('.form-item-cal-popup-start-time').attr('style', 'margin: -15px 0 0 0px !important');
+					region.find('.form-item-cal-popup-end-time').attr('style', 'margin: -16px 0 0 0px !important');
+			} else if (region.attr('class') == 'region region-content') {
+					region.find('.form-item-cal-popup-start-time').attr('style', 'margin: -17px 0 0 0px !important');
+					region.find('.form-item-cal-popup-end-time').attr('style', 'margin: -19px 0 0 0px !important');
+			}
+		});
 
 		/* Start date/time onblur handler */
 		$("input[id^='edit-cal-popup-start-']").focusout(function() {
@@ -43,21 +74,22 @@ $(function () {
 				endMin += (endHours == 12) ? opposite : ampm;
 				var newEndTime = endHours + ':' + endMin;
 				
-				if (timeBeforeSameDay(startDay, endDay, startTime, endTime)
-						|| dayBefore(startDay, endDay)) {
-						input.val(newEndTime);    
-				}
-				
-				var newEndDay = parseInt(startDay[2]) + 1;
-				newEndDay = addZero(newEndDay);
+				var newEndDay = addDay(parseInt(startDay[2]), startDay[0], startDay[1], 1);
 				var nextday = startDay[0] + '-' + startDay[1] + '-' + newEndDay;
+					 
 				
-				if (endMin.substr(2) == 'AM' && 
-						startTime[1].substr(2) == 'PM') {
+				if (startTime[1].substr(2) == 'PM' && endMin.substr(2) == 'AM') {
 						nextdate.val(nextday);
-				} else {
-						nextdate.val(startdate.val());
-				}     
+				} else if (timeBeforeSameDay(startDay, endDay, startTime, endTime)
+						|| dayBefore(startDay, endDay)) {
+
+						input.val(newEndTime);      
+						if (startTime[1].substr(2) == 'PM' && endTime.substr(2) == 'AM') {
+								nextdate.val(nextday);
+						} else {
+								nextdate.val(startdate.val());
+						}
+				}      
 		});
 
 		/* End date/time onblur handler */
@@ -80,26 +112,31 @@ $(function () {
 				var startDay = startdate.val().split('-');
 				var endDay = nextdate.val().split('-');
 				var endTime = theTime.val().split(':');
-				var startTime = input.val().split(':');
-				if (timeBeforeSameDay(startDay, endDay, startTime, endTime)
-						|| dayBefore(startDay, endDay)) {
-						
+				var startTime = input.val().split(':'); 
+				var sHour = getHour(startTime[0], startTime[1]); 
+				var eHour = getHour(endTime[0], endTime[1]);
+				var startDate = new Date(startDay[0], startDay[1], startDay[2],
+						sHour, parseInt(startTime[1]));
+				var endDate = new Date(endDay[0], endDay[1], endDay[2], eHour, 
+						parseInt(endTime[1]));
+
+				if (endDate <= startDate) {
 						// set start date/time to one hour before this time
-						var startHour = (endTime[0] == 1) ? 12 : endTime[0] - 1;
-						startHour = addZero(startHour);
-						var startMin = addZero(parseInt(endTime[1]));
-						var ampm = endTime[1].substr(2);
-						var opposite = (ampm == 'AM') ? 'PM' : 'AM';
-						startMin += (endTime[0] == 12) ? opposite : ampm;
-						var newStartTime = startHour + ":" + startMin;
-						
-						var newStartDay = 
-								(startHour == 11 && startMin.substr(2) == 'PM') ? // startTime is 11:xxPM
-								addZero(parseInt(endDay[2]) - 1) :
-								endDay[2];
-						var newStartDate = endDay[0] + "-" + endDay[1] + "-" + newStartDay;
+						var nsDate = new Date(endDate.valueOf() - 60*60*1000);
+						var startHour = nsDate.getHours();
+						var startMin = addZero(nsDate.getMinutes());
+						if (startHour == 0) startMin += 'AM';
+						else if (startHour >= 12) {
+								if (startHour > 12) startHour -= 12;
+								startMin += 'PM';
+						} else startMin += 'AM';
+						var newStartTime = addZero(startHour) + ":" + startMin;        
+						var newStartDate = nsDate.getFullYear() + "-" + 
+								("0" + nsDate.getMonth()).slice(-2) + "-" + 
+								("0" + nsDate.getDate()).slice(-2);
 						input.val(newStartTime);
 						startdate.val(newStartDate);
+			 
 				}
 		});
 
@@ -160,6 +197,20 @@ $(function () {
 				var ret = (x < 10) ? "0" + x : x;
 				return ret;
 		}
-		
+
+		function addDay(day, year, month, value) {
+				var newDate = new Date(year, month, day+value);
+				return addZero(newDate.getDate());
+		}
+
+		function getHour(str_hr, str_min) {
+				var hr = parseInt(str_hr);
+				if (str_min.substr(2) == 'PM' && hr != 12) 
+						hr += 12;
+				else if (str_min.substr(2) == 'AM' && hr == 12)
+						hr = 0;
+				return hr;
+		}
+
 	});
 })(jQuery);

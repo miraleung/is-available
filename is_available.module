@@ -102,12 +102,13 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	
 	// // Time constants
 	date_default_timezone_set('America/Vancouver');
-	$date_format = 'Y-m-d h:i';
+	$date_format = 'Y-m-d H:i';
+	// $query_date_format = 'Y-m-d H:i';
 	$current_time = date($date_format);
 	$current_time_rounded = round_to_nearest_15_minutes($current_time, 0, $date_format); 
 	$current_time_plus_hour = date($date_format, time() + 3600);
 	$current_time_plus_hour_rounded = round_to_nearest_15_minutes($current_time_plus_hour, 1, $date_format); 
-	
+	dpm($current_time);
 	// Set the calendar
 	if (!isset($form_state['values']['cal_popup_start']))
 		$form_state['values']['cal_popup_start'] = $current_time_rounded;
@@ -121,6 +122,10 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	$value_building_name = isset($form_state['values']['building_name']) ?
 		$form_state['values']['building_name'] : NULL;
 
+	// $query_start_time = get_mysql_24h_date($value_start_time);
+	// $query_end_time = get_mysql_24h_date($value_end_time);
+		// dpm($value_start_time); dpm($value_end_time);
+	// dpm($query_start_time); dpm($query_end_time);
 	
 	// Dropdowns and their currently selected value
 	$value_resource_type = isset($form_state['values']['type']) ? 
@@ -131,7 +136,9 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	$value_dropdown_building = isset($form_state['values']['building_name']) ? 
 		$form_state['values']['building_name'] : key($dropdown_building_options);
 	$value_available_resources = is_available_available_resources(
-			$value_dropdown_building, $dropdown_building_options, $value_start_time,  $value_end_time, 
+			$value_dropdown_building, $dropdown_building_options, 
+			//$query_start_time, $query_end_time,   
+			$value_start_time, $value_end_time,  
 			$value_resource_type, $array_et, $resource_types, $array_fbld_field, $array_frn_field, $all,
 			$date_format); 
 		
@@ -169,7 +176,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	// Start date/time
 	$form['cal_popup_start'] = array(
 		'#type' => 'date_popup', 
-		'#date_format' => $date_format,
+		'#date_format' => 'Y-m-d h:iA',
 		'#title' => t('Start Date'),
 		'#description' => '',
 		'#default_value' => $value_start_time,
@@ -187,7 +194,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	$form['cal_popup_end'] = array(
 	'#title' => t('End Date'), 
 	'#type' => 'date_popup', 
-	'#date_format' => $date_format,
+	'#date_format' => 'Y-m-d h:iA',
 	'#description' => '',
 	'#default_value' => $value_end_time,
 	'#date_increment' => 15,
@@ -393,7 +400,7 @@ function execute_query($building_name, $start_time, $end_time, $resource_type, $
 	$drop_temp_query = $query_object->get_drop_temp();
 	$create_temp_query = $query_object->get_create_temp();
 	$mysql_query = $query_object->get_main_query();
-	
+	dpm("get_query: " . $mysql_query);
 	$get_result = 1;
 	if (!is_string($mysql_query)) $get_result = $mysql_query;
 	else if (trim($mysql_query) == "") $get_result = -2;	
@@ -740,7 +747,9 @@ function get_empty_resource_query_result($mysql_query, $building_name, $start_ti
 		return $error_str . $check_str;
 	}
 
-	$time_interval = ' from ' . $start_time . ' to ' . $end_time;
+	$time_interval = get_time_interval_str($start_time, $end_time);
+	dpm("RESULT");
+	dpm($time_interval);
 	
 	// Execute the query
 	$query = db_query($mysql_query);
@@ -948,6 +957,27 @@ function building_has_resource_type_query($building_name, $rt_object, $all_types
 		$count += $q->cnt;
 	}
 	return $count;
+}
+
+function get_time_interval_str($start_time, $end_time) {
+	$str_sdate = strtotime($start_time);
+	$str_edate = strtotime($end_time);
+	dpm(date('h:i l, F jS', $str_edate));
+	$day_equals = (date('Y-m-d', $str_sdate) == date('Y-m-d', $str_edate));
+	$year_equals = (date('Y', $str_sdate) == date('Y', $str_edate)); 
+	$time_interval = "";
+	
+	if ($day_equals) {
+		$time_interval = ' on ' . date('l, F jS', $str_sdate) . ' from ' .
+			date('h:i', $str_sdate) . ' to ' . date('h:i', $str_edate);
+	} else {
+		$dte_format = 'h:i l, F jS';
+		if (!$year_equals) $dte_format .= ', Y';
+		$time_interval = ' from ' . date($dte_format, $str_sdate) . 
+			' to ' . date($dte_format, $str_edate);
+	}
+	
+	return $time_interval;
 }
 
 /**
@@ -1401,4 +1431,20 @@ function block_view_helper_get_label($table, $machine_name) {
 		$ret_str = $q->label;
 	}
 	return $ret_str;
+}
+
+function get_mysql_24h_date($ampm_date) {
+	// Y-m-d h:ia format
+	$str_splode = explode(" ", $ampm_date);
+	$time = explode(":", $str_splode[1]);
+	$hr = $time[0];
+	switch ($hr) {
+		case 12:
+			if ($time[1] == 'am') $hr = 00;
+			break;
+		default:
+			if ($time[1] == 'pm') $hr += 12;
+			break;
+	}
+	return $str_splode[0] . " " . $hr . ":" . substr($time[1], 0, 2);
 }

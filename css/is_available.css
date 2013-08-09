@@ -79,34 +79,42 @@
 
 /* Datepicker fields */
 .form-type-date-popup .date-padding {
-	padding: 3px !important;
+	padding: 0px !important;
 	margin: 0 5px 0 0;
 }
 
 /* Start time field */
 div.form-item.form-type-textfield.form-item-cal-popup-start-time {
-	float: left;
-	width: 60%;
-	clear: both;
-	margin: 7px 0 0 0;
+float: left;
+width: 40%;
+/* margin: -16px 0 0 0px; */
+display: block;
 }
 
 /* End time field */
 div.form-item.form-type-textfield.form-item-cal-popup-end-time {
-	width: 60%;
-	margin: 7px 0 0 0;
+float: left;
+width: 40%;
+/* margin: -17px 0 0 0px; */
+display: block;
 }
 
 span.timeEntry_wrap {
-	width: 80%;
+	width: 100%;
 }
 
 input.form-text.hasTimeEntry {
-	width: 100% !important;
+	float: left;
+	margin-top: 0px !important;
 }
 
 input.form-text.hasDatepicker {
 	float: left !important;
+	margin-top: 0px !important;
+}
+
+.description {
+	font-size: x-small !important;
 }
 
 .form-item-cal-popup-start-time {
@@ -126,25 +134,16 @@ div.reset-fields {
 	display: block;
 }
 
-/* Width of start time textfield */
-input#edit-cal-popup-start--2-timeEntry-popup-1.form-text.hasTimeEntry.date-popup-init {
-	width: 100%;
-} 
-
-/* Width of end time textfield */
- input#edit-cal-popup-end--2-timeEntry-popup-1.form-text.hasTimeEntry.date-popup-init {
-	width: 100%;
-} 
 
 div.form-item.form-type-textfield.form-item-cal-popup-start-date {
 	float: left;
-	margin-top: -25px;
+	margin-top: -1px;
 }
 
 /* Hide the end date, b/c it's the same as the start date */
 div.form-item.form-type-textfield.form-item-cal-popup-end-date {
  /*	visibility: hidden; uncomment after fixing js*/ 
- margin-top: -25px;
+ margin-top: 0px !important;
 }
 
 /* Start date/time field */
