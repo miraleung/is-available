@@ -87,13 +87,15 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	
 	// if it has only the - All - option, return
 	if (sizeof($resource_type_options) <= 1 || empty($resource_types)) { 
-		drupal_set_message("Error: No searchable resource types detected. Please check your settings.", 'error');
+		drupal_set_message("Error: No searchable resource types detected. 
+			Please check your settings.", 'error');
 		return;
 	}
 	
 	// if it has only the - All - option, return
 	if (sizeof($all_building_options) <= 1 || empty($buildings)) { 
-		drupal_set_message("Error: No searchable buildings detected. Please check your settings.", 'error');
+		drupal_set_message("Error: No searchable buildings detected. 
+			Please check your settings.", 'error');
 		return;
 	}
 	
@@ -105,9 +107,11 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	$date_format = 'Y-m-d H:i';
 	// $query_date_format = 'Y-m-d H:i';
 	$current_time = date($date_format);
-	$current_time_rounded = round_to_nearest_15_minutes($current_time, 0, $date_format); 
+	$current_time_rounded = 
+		round_to_nearest_15_minutes($current_time, 0, $date_format); 
 	$current_time_plus_hour = date($date_format, time() + 3600);
-	$current_time_plus_hour_rounded = round_to_nearest_15_minutes($current_time_plus_hour, 1, $date_format); 
+	$current_time_plus_hour_rounded = 
+		round_to_nearest_15_minutes($current_time_plus_hour, 1, $date_format); 
 	dpm($current_time);
 	// Set the calendar
 	if (!isset($form_state['values']['cal_popup_start']))
@@ -122,11 +126,6 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	$value_building_name = isset($form_state['values']['building_name']) ?
 		$form_state['values']['building_name'] : NULL;
 
-	// $query_start_time = get_mysql_24h_date($value_start_time);
-	// $query_end_time = get_mysql_24h_date($value_end_time);
-		// dpm($value_start_time); dpm($value_end_time);
-	// dpm($query_start_time); dpm($query_end_time);
-	
 	// Dropdowns and their currently selected value
 	$value_resource_type = isset($form_state['values']['type']) ? 
 		$form_state['values']['type'] : key($resource_type_options);
@@ -137,17 +136,18 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 		$form_state['values']['building_name'] : key($dropdown_building_options);
 	$value_available_resources = is_available_available_resources(
 			$value_dropdown_building, $dropdown_building_options, 
-			//$query_start_time, $query_end_time,   
 			$value_start_time, $value_end_time,  
-			$value_resource_type, $array_et, $resource_types, $array_fbld_field, $array_frn_field, $all,
+			$value_resource_type, $array_et, $resource_types, 
+			$array_fbld_field, $array_frn_field, $all,
 			$date_format); 
 		
+	$key = 'search';;
 	// Markup the form
-	$form['#prefix'] = '<div class="search-form">';
-	$form['#suffix'] = '</div>';
+	$form[$key]['#prefix'] = '<div class="search-form-' . $multi_id. '">';
+	$form[$key]['#suffix'] = '</div>';
 	
 	// Resource type
- 	$form['type'] = array(
+ 	$form[$key]['type'] = array(
 		'#type' => 'select',
 		'#title' => t('Resource type'),
 		'#default_value' => $resource_type_options,
@@ -164,7 +164,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	);
 	
 	// Building options
-	$form['building_name'] = array(
+	$form[$key]['building_name'] = array(
 		'#type' => 'select',
 		'#title' => t('Building'),
 		'#options' => $dropdown_building_options,
@@ -174,7 +174,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	);
 
 	// Start date/time
-	$form['cal_popup_start'] = array(
+	$form[$key]['cal_popup_start'] = array(
 		'#type' => 'date_popup', 
 		'#date_format' => 'Y-m-d h:iA',
 		'#title' => t('Start Date'),
@@ -191,7 +191,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 		);
 	
 	// End date/time
-	$form['cal_popup_end'] = array(
+	$form[$key]['cal_popup_end'] = array(
 	'#title' => t('End Date'), 
 	'#type' => 'date_popup', 
 	'#date_format' => 'Y-m-d h:iA',
@@ -208,7 +208,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	);
 	
 		// "Check for availability" button
- 	$form['check_availability'] = array(
+ 	$form[$key]['check_availability'] = array(
 		'#type' => 'button',
 		'#value' => t('Search'),
 		'#button_type' => 'submit ajax-trigger',
@@ -216,25 +216,16 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 			'submitter' => FALSE,
 			'callback' => 'ajax_available_resources_callback', 
 			'event' => 'mousedown',
-			'wrapper' => 'available-resources-' . $multi_id,
+			'wrapper' => 'search-form-' . $multi_id,
 			'method' => 'replace',
 			'effect' => 'fade',
 		),  
 		'#prefix' => '<div class="search" >', 
 		'#suffix' => '</div>',
 	);
-	
-		// "Reset fields" button (clears form and reloads the page)
-	$form['clear'] = array(
-		'#type' => 'submit',
-		'#value' => t('Reset fields'), 
-		'#validate' => 'is_available_resource_search_form_clear',
-		'#prefix' => '<div class="reset-fields">', 
-		'#suffix' => '</div>',		
-	); 
 
 	// Available resources display (result)
-	$form['available_resources'] = array(
+	$form[$key]['available_resources'] = array(
 		'#markup' =>  '<p>' . $value_available_resources	. '</p>',
 		'#prefix' => '<div id="available-resources-' . $multi_id . '">',
 		'#suffix' => '</div>',
@@ -369,9 +360,12 @@ function is_available_available_resources($building_id, $building_options, $star
 	$resultset = array();
 	
 	if ($start_time >= $end_time) {
-		$result = 'Error: Start date/time must precede end date/time. ' . $start_time . ' ' . $end_time;
+		$result = 'Error: Start date/time must precede end date/time. ' . 
+			$start_time . ' ' . $end_time;
 	} else {
-		$result = execute_query($building_name, $start_time, $end_time, $resource_type, $array_et, $all,
+		$result = 
+			execute_query($building_name, $start_time, $end_time, 
+			$resource_type, $array_et, $all,
 			$resource_types, $array_fbld_field, $array_frn_field, $date_format);
 	}
 	return t($result);
@@ -390,18 +384,22 @@ function is_available_available_resources($building_id, $building_options, $star
  *
  * @return $result Human-readable string result of the query. 
  */
-function execute_query($building_name, $start_time, $end_time, $resource_type, $array_et, $all,
+function execute_query($building_name, $start_time, $end_time, 
+	$resource_type, $array_et, $all,
 	$resource_types, $array_fbld_field, $array_frn_field, $date_format) {
+	
 	$all_resources = ($resource_type == $all);
 	$all_buildings = ($building_name == $all);
-	$query_object = get_empty_resource_query_object($building_name, $start_time, $end_time, 
-		$resource_type, $array_et, $resource_types, $array_fbld_field, $array_frn_field,
-		$all_resources, $all_buildings, $date_format);
+	$query_object = 
+		get_empty_resource_query_object($building_name, $start_time, $end_time, 
+		$resource_type, $array_et, $resource_types, $array_fbld_field, 
+		$array_frn_field,	$all_resources, $all_buildings, $date_format);
+	
 	$drop_temp_query = $query_object->get_drop_temp();
 	$create_temp_query = $query_object->get_create_temp();
 	$mysql_query = $query_object->get_main_query();
-	dpm("get_query: " . $mysql_query);
 	$get_result = 1;
+	
 	if (!is_string($mysql_query)) $get_result = $mysql_query;
 	else if (trim($mysql_query) == "") $get_result = -2;	
 
@@ -414,11 +412,10 @@ function execute_query($building_name, $start_time, $end_time, $resource_type, $
 	// -2: No eneity types or empty sql query
 	// -1: All buildings with specific resource type; no such resource type
 	// 0 : specific building & specific resource type;; no such resource in that building 
-	
-	$result = get_empty_resource_query_result(
-		$mysql_query, $building_name, $start_time, 
-		$end_time, $resource_type, $resource_types, $buildings, $all_resources, $all_buildings, $get_result
-	);
+	$result = 
+		get_empty_resource_query_result($mysql_query, $building_name, 
+		$start_time, $end_time, $resource_type, $resource_types, 
+		$buildings, $all_resources, $all_buildings, $get_result);
 	return $result;
 }
 
@@ -439,7 +436,8 @@ function get_empty_resource_query_object($building_name, $start_time, $end_time,
 	$resource_types, $array_fbld_field, $array_frn_field, $all_resources, $all_buildings, $date_format) {
 	
 	if (empty($array_et)) {
-		drupal_set_message("Error: No searchable entity types detected. Please check your settings.", "error");
+		drupal_set_message("Error: No searchable entity types detected. 
+			Please check your settings.", "error");
 		$bldg_check_str = -2;
 		$query_object = new EmptyResourceQuery(0, 0, $bldg_check_str);
 		return $query_object;
@@ -449,8 +447,8 @@ function get_empty_resource_query_object($building_name, $start_time, $end_time,
 	$gmt_start_time = gmdate($date_format, strtotime($start_time));
 	$gmt_end_time = gmdate($date_format, strtotime($end_time));
 	
-	$gmt_start_time .= ":00";
-	$gmt_end_time .= ":00";
+	$gmt_start_time = mysql_real_escape_string($gmt_start_time . ":00");
+	$gmt_end_time .= mysql_real_escape_string($gmt_end_time . ":00");
 	
 	$check = get_bldg_rn_condition_int($all_resources, $all_buildings); 	
 
@@ -463,17 +461,18 @@ function get_empty_resource_query_object($building_name, $start_time, $end_time,
 	
 	// Assumes unique machine names for each resource type, building
 	$et_i = 0;
-	$temp_table_name = 'is_available_temp';
+	$temp_table_name = mysql_real_escape_string('is_available_temp');
 	$et_select_str = '';
 	$et_inner_join_str = "FROM eck_bundle EB ";
 	$et_where_eb_str = $where_paren;
-	$date_check = " AND '" . $gmt_start_time . "' < '" . $gmt_end_time . "' ";
+	$date_check = " AND '$gmt_start_time' < '$gmt_end_time' ";
 	
 	$bldg_check_str = $and_paren;
 	
 	$select_str = "SELECT ";
 	
-	$and_not_exists = " AND NOT EXISTS (SELECT * FROM " . $temp_table_name . " Temp WHERE ";
+	$and_not_exists = 
+		" AND NOT EXISTS (SELECT * FROM $temp_table_name Temp WHERE ";
 	$temp_field_name = "";
 	
 	$not_in_str = $and_not_exists;
@@ -482,26 +481,31 @@ function get_empty_resource_query_object($building_name, $start_time, $end_time,
 	$array_fbld_been_here = array();
 	$array_frn_been_here = array();
 	
-	$delete_temp_table = "DROP TEMPORARY TABLE IF EXISTS " . $temp_table_name;
-	$nested_query_temp_table = "CREATE TEMPORARY TABLE " . $temp_table_name . " AS ";
+	$delete_temp_table = "DROP TEMPORARY TABLE IF EXISTS $temp_table_name";
+	$nested_query_temp_table = "CREATE TEMPORARY TABLE $temp_table_name AS ";
 	
 	foreach ($array_et as $et_machine_name => $et_object) {
 		$et_i_str = "ET" . $et_i;
-		if ($all_resources) build_et_select_query_str($et_select_str, $et_i_str);
-		build_et_inner_join_eb_et_query_str($et_inner_join_str, $et_where_eb_str, $et_object, $et_i_str);
+		if ($all_resources) 
+			build_et_select_query_str($et_select_str, $et_i_str);
+		
+		build_et_inner_join_eb_et_query_str($et_inner_join_str, 
+			$et_where_eb_str, $et_object, $et_i_str);
 
 		if (!$et_object->get_resource_types()) {
-			drupal_set_message("Error: No searchable resource types detected for " . $et_object->get_name() .
-				". Please check your settings.", "error");
+			drupal_set_message("Error: No searchable resource types detected for " . 
+				$et_object->get_name() . ". Please check your settings.", "error");
 			$bldg_check_str = -1;
 			break;
 		}
 		
-		foreach ($et_object->get_resource_types() as $rt_machine_name => $rt_object) {
+		foreach ($et_object->get_resource_types() as 
+			$rt_machine_name => $rt_object) {
 			// Build building check part of query
 			switch ($check) {
 			case 0: // all rt all b
-				build_all_b_bldg_check($bldg_check_str, $et_i_str, $rt_object, $array_fbld_field);
+				build_all_b_bldg_check($bldg_check_str, $et_i_str, $rt_object, 
+					$array_fbld_field);
 				break;
 			case 1: // all rt specific b
 				build_specific_b_bldg_check($bldg_check_str, $building_name,
@@ -509,7 +513,8 @@ function get_empty_resource_query_object($building_name, $start_time, $end_time,
 				break;
 			case 2: // specific rt all b
 				if ($resource_name == $rt_object->get_machine_name()) {
-					build_all_b_bldg_check($bldg_check_str,	$et_i_str, $rt_object, $array_fbld_field);
+					build_all_b_bldg_check($bldg_check_str,	$et_i_str, $rt_object, 
+						$array_fbld_field);
 				}
 				break;
 			case 3: // specific rt specific b
@@ -520,8 +525,9 @@ function get_empty_resource_query_object($building_name, $start_time, $end_time,
 				break;
 			}
 			// Build building and resource number inner join table
-			build_fbld_frn_inner_join_str($fbld_frn_inner_join_str, $rt_object, $array_fbld_been_here,
-				$array_frn_been_here, $array_fbld_field, $array_frn_field, $et_i_str);
+			build_fbld_frn_inner_join_str($fbld_frn_inner_join_str, $rt_object, 
+				$array_fbld_been_here, $array_frn_been_here, $array_fbld_field, 
+				$array_frn_field, $et_i_str);
 		}
 		$et_i++;
 	}
@@ -541,29 +547,42 @@ function get_empty_resource_query_object($building_name, $start_time, $end_time,
 	build_nested_temp_query($nested_query_temp_table, $temp_table_field, $resource_types, 
 		$start_time, $end_time);
 		
-	if (!empty($et_select_str)) $et_select_str = substr($et_select_str, 0, -2) . " ";
-	build_select_str_and_not_in($select_str, $not_in_str, $temp_table_name, $temp_table_field, 
-		$array_fbld_field, $array_frn_field, $et_select_str, $all_resources, $all_buildings);
-	$et_where_eb_str = (substr($et_where_eb_str, -$where_paren_strlen) == $where_paren) ? 
+	if (!empty($et_select_str)) 
+		$et_select_str = substr($et_select_str, 0, -2) . " ";
+	build_select_str_and_not_in($select_str, $not_in_str, 
+		$temp_table_name, $temp_table_field, $array_fbld_field, 
+		$array_frn_field, $et_select_str, $all_resources, $all_buildings);
+	$et_where_eb_str = 
+		(substr($et_where_eb_str, -$where_paren_strlen) == $where_paren) ? 
 		"" : substr($et_where_eb_str, 0, -4) . ") ";
 
-	$bldg_check_str = (substr($bldg_check_str, -$and_paren_strlen) == $and_paren) ?
+	$bldg_check_str = 
+		(substr($bldg_check_str, -$and_paren_strlen) == $and_paren) ?
 		"" : substr($bldg_check_str, 0, -4) . ") ";
-	$not_in_str = (substr($not_in_str, -$and_strlen) == $and) ? "" : $not_in_str;
+	$not_in_str = 
+		(substr($not_in_str, -$and_strlen) == $and) ? "" : $not_in_str;
+	
 	$et_where_eb_str .= $date_check;
 	
-	$inner_join_where_str = $et_inner_join_str . $fbld_frn_inner_join_str . $et_where_eb_str;
+	$inner_join_where_str = 
+		$et_inner_join_str . $fbld_frn_inner_join_str . $et_where_eb_str;
 	
-	$mysql_query = $select_str . $inner_join_where_str . $bldg_check_str . $not_in_str;
-	$query_object = new EmptyResourceQuery($delete_temp_table, $nested_query_temp_table, $mysql_query);
+	$mysql_query = 
+		$select_str . $inner_join_where_str . $bldg_check_str . $not_in_str;
+	$query_object = 
+		new EmptyResourceQuery($delete_temp_table, $nested_query_temp_table, 
+		$mysql_query);
 	return $query_object;
 }
 
 function get_bldg_rn_condition_int($all_resources, $all_buildings) {
 	$check = 0; // all_resources && all_buildings
-	if ($all_resources && !$all_buildings) $check = 1; // all_resources && specific bldg
-	else if (!$all_resources && $all_buildings) $check = 2; // specific resource && all_bldgs
-	else if (!$all_resources && !$all_buildings) $check = 3; // specific resource && specific bldg
+	if ($all_resources && !$all_buildings) 
+		$check = 1; // all_resources && specific bldg
+	else if (!$all_resources && $all_buildings) 
+		$check = 2; // specific resource && all_bldgs
+	else if (!$all_resources && !$all_buildings) 
+		$check = 3; // specific resource && specific bldg
 	return $check;
 }
 
@@ -575,23 +594,33 @@ function build_et_select_query_str(&$et_select_str, $et_i_str) {
 }
 
 function build_et_inner_join_eb_et_query_str(&$et_inner_join_str, &$et_where_eb_str, $et_object, $et_i_str) {
-	$et_inner_join_str .= "INNER JOIN " . $et_object->get_eck_table() . " " . $et_i_str . 
-		" ON " .	$et_i_str . ".type = EB.name ";
-	$et_where_eb_str .= "EB.entity_type = '" . $et_object->get_machine_name() . "' OR ";
+	$et_i_str = mysql_real_escape_string($et_i_str);
+	$et_inner_join_str .= "INNER JOIN " . 
+		mysql_real_escape_string($et_object->get_eck_table()) . 
+		" $et_i_str ON " .	$et_i_str . ".type = EB.name ";
+	$et_where_eb_str .= "EB.entity_type = '" . 
+		mysql_real_escape_string($et_object->get_machine_name()) . "' OR ";
 }
 
-function build_all_b_bldg_check(&$bldg_check_str, $et_i_str, $rt_object, $array_fbld) {
+function build_all_b_bldg_check(&$bldg_check_str, $et_i_str, $rt_object, 
+	$array_fbld) {
+	
 	$buildings = $rt_object->get_buildings();
-	if (empty($buildings)) return;
 	
-	$fbld_name = $rt_object->get_field_building();
-	$fbld_table = get_field_table($fbld_name);
-	$fbld_field = get_field_column($fbld_name);
-	$fbld_key = array_search($fbld_name, $array_fbld);
+	if (empty($buildings)) 
+		return;
 	
-	$bldg_check_str .= "(" . $et_i_str . ".type = '" . $rt_object->get_machine_name() . "' AND (";
+	$fbld_name = mysql_real_escape_string($rt_object->get_field_building());
+	$fbld_table = mysql_real_escape_string(get_field_table($fbld_name));
+	$fbld_field = mysql_real_escape_string(get_field_column($fbld_name));
+	$fbld_key = mysql_real_escape_string(array_search($fbld_name, $array_fbld));
+	
+	$bldg_check_str .= "(" . $et_i_str . ".type = '" . 
+		mysql_real_escape_string($rt_object->get_machine_name()) . "' AND (";
+		
 	foreach ($rt_object->get_buildings() as $bldg_str_id => $bldg_object) {
-		$bldg_check_str .= $fbld_key . "." . $fbld_field . " = '" . $bldg_object->get_name() . "' OR ";
+		$bldg_check_str .= $fbld_key . "." . $fbld_field . " = '" . 
+			mysql_real_escape_string($bldg_object->get_name()) . "' OR ";
 	}
 	$bldg_check_str = substr($bldg_check_str, 0, -4) . ")) OR ";
 }
@@ -599,36 +628,45 @@ function build_all_b_bldg_check(&$bldg_check_str, $et_i_str, $rt_object, $array_
 function build_specific_b_bldg_check(&$bldg_check_str, $building_name,
 	$et_i_str, $rt_object, $array_fbld_field, $check = 1) {
 	$buildings = $rt_object->get_buildings();
-		
-	if (!is_string($bldg_check_str) && $check == 3) return;
+	
+	if (!is_string($bldg_check_str) && $check == 3) 
+		return;
 	
 	if (empty($buildings) || !array_key_exists($building_name, $buildings)) {
 		if ($check == 3) $bldg_check_str = 0; // none of these resource types in this building
 		return;
 	}
 	
-	$fbld_name = $rt_object->get_field_building();
-	$fbld_table = get_field_table($fbld_name);
-	$fbld_field = get_field_column($fbld_name);
-	$fbld_key = array_search($fbld_name, $array_fbld_field);
-
-	$bldg_check_str .= "(" . $et_i_str . ".type = '" . $rt_object->get_machine_name() . "' AND " .
+	$fbld_name = mysql_real_escape_string($rt_object->get_field_building());
+	$fbld_table = mysql_real_escape_string(get_field_table($fbld_name));
+	$fbld_field = mysql_real_escape_string(get_field_column($fbld_name));
+	$fbld_key = mysql_real_escape_string(array_search($fbld_name, $array_fbld));
+	$building_name = mysql_real_escape_string($buiding_name);
+		
+	$bldg_check_str .= "(" . $et_i_str . ".type = '" . 
+		mysql_real_escape_string($rt_object->get_machine_name()) . "' AND " .
 		$fbld_key . "." . $fbld_field . " = '" . $building_name . "') OR ";
 }
 
 function build_fbld_frn_inner_join_str(&$fbld_frn_inner_join_str, $rt_object, 
-	&$array_fbld_been_here, &$array_frn_been_here, $array_fbld_field, $array_frn_field, $et_i_str) {
+	&$array_fbld_been_here, &$array_frn_been_here, $array_fbld_field, 
+	$array_frn_field, $et_i_str) {
 	
 	$field_building = $rt_object->get_field_building();
 	$field_rn = $rt_object->get_field_room_number();
 	$fbld_key = array_search($field_building, $array_fbld_field);
 	$frn_key = array_search($field_rn, $array_frn_field);
+	
 	if (!$fbld_key || !$frn_key) {
-		drupal_set_message("Error in build_fbld_frn_inner_join_str: " . $field_building . " or " . 
+		drupal_set_message("Error in build_fbld_frn_inner_join_str: " . 
+			$field_building . " or " . 
 			$field_rn . " was not detected in the selection list.", "error");
 		return;
 	}
-	if (in_array($fbld_key, $array_fbld_been_here)) return;
+	
+	if (in_array($fbld_key, $array_fbld_been_here)) 
+		return;
+	
 	$bldg_table = $rt_object->get_building_table();
 	$bldg_field = $rt_object->get_building_field();
 	$fbld_frn_inner_join_str .= " INNER JOIN " . $bldg_table . " "  . $fbld_key . 
@@ -636,16 +674,22 @@ function build_fbld_frn_inner_join_str(&$fbld_frn_inner_join_str, $rt_object,
 	array_push($array_fbld_been_here, $fbld_key);
 	
 	if (in_array($frn_key, $array_frn_been_here)) return;
-	$rn_table = $rt_object->get_room_number_table();
+	$rn_table = mysql_real_escape_string($rt_object->get_room_number_table());
 	$rn_field = $rt_object->get_room_number_field();
+	$frn_key = mysql_real_escape_string($frn_key);
+	$fbld_key = mysql_real_escape_string($fbld_key);
+	
 	$fbld_frn_inner_join_str .= "INNER JOIN " . $rn_table . " " . $frn_key .
 		" ON " . $frn_key . ".entity_id = " . $fbld_key . ".entity_id ";
 	array_push($array_frn_been_here, $frn_key);	
 }
 
-function build_select_str_and_not_in(&$select_str, &$not_in_str, $temp_table_name, $temp_table_field, 
-	$array_fbld_field, $array_frn_field, $et_select_str, $all_resources, $all_buildings) {
+function build_select_str_and_not_in(&$select_str, &$not_in_str, 
+	$temp_table_name, $temp_table_field, $array_fbld_field, 
+	$array_frn_field, $et_select_str, $all_resources, $all_buildings) {
 
+	$temp_table_field = mysql_real_escape_string($temp_table_field);
+		
 	// otherwise, if a specific building, no need to get the field building returned
 	if ($all_buildings) {
 		foreach ($array_fbld_field as $key => $value) {
@@ -670,21 +714,23 @@ function build_nested_temp_query(&$nested_query_temp_table, &$temp_table_field,
 	foreach ($resource_types as $rt_machine_name => $rt_object) {
 		$entref_date_table = $rt_object->get_entref_date_table(); // array
 		if (!$entref_date_table || empty($entref_date_table)) {
-				drupal_set_message("Error: No entity reference or date table detected for " 
-					. $rt_object->get_title() . ". Please check your settings.");
+				drupal_set_message("Error: No entity reference or date table 
+					detected for " . $rt_object->get_title() . ".
+					Please check your settings.");
 				return;
-			}
+		}
+			
 		foreach ($entref_date_table as $entref => $date) {
 		
 			if (!$entref) {
-				drupal_set_message("Error: No entity reference table detected for " . $rt_object->get_title() . 
-					". Please check your settings.");
+				drupal_set_message("Error: No entity reference table detected for " . 
+					$rt_object->get_title() . ". Please check your settings.");
 				return;
 			}
 			
 			if (!$date) {
-				drupal_set_message("Error: No date table detected for " . $rt_object->get_title() . 
-					". Please check your settings.");
+				drupal_set_message("Error: No date table detected for " . 
+					$rt_object->get_title() . ". Please check your settings.");
 				return;
 			}
 
@@ -692,21 +738,27 @@ function build_nested_temp_query(&$nested_query_temp_table, &$temp_table_field,
 			if (trim($temp_table_field) == "")
 				$temp_table_field = $entref_target_id;
 		
-			$entref_field = "FER." . $entref_target_id;
-			$entref_table = get_field_table($entref);
-			$date_field1 = "FDTE." . $date . "_value";
-			$date_field2 = $date_field1 . "2";
-			$date_table = get_field_table($date);
+			$entref_field = mysql_real_escape_string("FER." . $entref_target_id);
+			$entref_table = mysql_real_escape_string(get_field_table($entref));
+			$date_field1 = mysql_real_escape_string("FDTE." . $date . "_value");
+			$date_field2 = mysql_real_escape_string($date_field1 . "2");
+			$date_table = mysql_real_escape_string(get_field_table($date));
 			
 			// Build the string
-			$nested_query_temp_table .= "SELECT " . $entref_field . " FROM " . $date_table . " FDTE " .
-			"INNER JOIN " . $entref_table . " FER ON FER.entity_id = FDTE.entity_id WHERE (" . 
-			$date_field1 . " < '" . $start_time . "' AND '" . $start_time . "' < " . $date_field2 . ") OR (" .
-			$date_field1 . " < '" . $end_time . "' AND '" . $end_time . "' < " . $date_field2 . ") OR ((" .
-			$date_field1 . " BETWEEN '" . $start_time . "' AND '" . $end_time . "') AND (" .
-			$date_field2 . " BETWEEN '" . $start_time . "' AND '" . $end_time . "')) UNION ";
+			$nested_query_temp_table .= 
+				"SELECT " . $entref_field . " FROM " . $date_table . " FDTE " .
+				"INNER JOIN " . $entref_table . " FER 
+				ON FER.entity_id = FDTE.entity_id WHERE (" . 
+				$date_field1 . " < '" . $start_time . "' 
+					AND '" . $start_time . "' < " . $date_field2 . ") OR (" .
+				$date_field1 . " < '" . $end_time . "' 
+					AND '" . $end_time . "' < " . $date_field2 . ") OR ((" .
+				$date_field1 . " BETWEEN '" . $start_time . "' AND '" . $end_time . "') 
+					AND (" . $date_field2 . " BETWEEN '" . $start_time . "' 
+					AND '" . $end_time . "')) UNION ";
 		}
 	}
+	
 	if (substr($nested_query_temp_table, -7) == " UNION ")
 		$nested_query_temp_table = substr($nested_query_temp_table, 0, -7); // remove last " UNION "
 }
@@ -728,7 +780,8 @@ function build_nested_temp_query(&$nested_query_temp_table, &$temp_table_field,
 function get_empty_resource_query_result($mysql_query, $building_name, $start_time, 
 	$end_time, $resource_type, &$resource_types, &$buildings,  $all_types, $all_buildings, $get_result = 1) {
 
-	$type = $all_types ? "resource types" : $resource_types[$resource_type]->get_plural_name();
+	$type = $all_types ? 
+		"resource types" : $resource_types[$resource_type]->get_plural_name();
 	$header = 'Available ' . $type;
 	$resource_result = '';
 	$result = '';
@@ -748,8 +801,6 @@ function get_empty_resource_query_result($mysql_query, $building_name, $start_ti
 	}
 
 	$time_interval = get_time_interval_str($start_time, $end_time);
-	dpm("RESULT");
-	dpm($time_interval);
 	
 	// Execute the query
 	$query = db_query($mysql_query);
@@ -769,18 +820,14 @@ function get_empty_resource_query_result($mysql_query, $building_name, $start_ti
 		}
 	}
 	if (trim($resource_result) == '' || trim($resource_result, '<br>') == '') { 	
-	/// if ($all_buildings == 0 || $all_buildings == NULL) { //
 		if (!$all_buildings) {
-		//  If some specific building is selected, then query the field_building table 
-		// to see if the building has resources of resource_type 
-		/* Assumption: Most users are smart enough to realize that there are no classresources in ICCS,
-		 * so this is a rare case. This case is also caught above, but we do it here again in case the
-		 * query returns nothing. So it is performed very rarely*/
 			$rt_object = $resource_types[$resource_type];
-			$rt_in_building_count = building_has_resource_type_query($building_name, $rt_object, $all_types, $resource_types, $resource_type);
+			$rt_in_building_count = 
+				building_has_resource_type_query($building_name, 
+					$rt_object, $all_types, $resource_types, $resource_type);
 			if ($rt_in_building_count == 0) {
-	
-				$result = 'Sorry, there are no ' . $type . $in . $building_name . '. Please check your search terms.';
+				$result = "Sorry, there are no $type $in $building_name. 
+					Please check your search terms.";
 				return $result;
 			} 
 		} 
@@ -810,7 +857,7 @@ function get_all_buildings_all_types_result($query, $resource_types, $buildings)
 	$temp_array = array();
 	reset($resource_types);
 	
-	//$temp_array maps string -> Pair<string, string> (see corresp. class below)
+	//$temp_array maps string -> Pair<string, string> (see corresp. class in file)
 	// 	ResourceType->machine_name => Pair<resource_result_string, get_title()>
 	$temp_array = make_machine_name_string_title_pair($resource_types);
 	$resources_so_far = array();
@@ -864,7 +911,9 @@ function get_all_buildings_not_all_types_result($query, $resource_types, $buildi
  *
  * @return Human-readable result
  */
-function get_not_all_buildings_all_types_result($query, $resource_types, $buildings) {
+function get_not_all_buildings_all_types_result($query, 
+	$resource_types, $buildings) {
+	
 	$resource_result = '';
 	$ender = 's: ';
 	
@@ -881,7 +930,8 @@ function get_not_all_buildings_all_types_result($query, $resource_types, $buildi
 		$frn_value = $rt_object->get_room_number_field();
 		$resource = $r->$frn_value;
 		
-		append_all_resource_types_query_result($temp_array, $resource, $rtype, $ender, $resources_so_far);
+		append_all_resource_types_query_result($temp_array, $resource, 
+			$rtype, $ender, $resources_so_far);
 	}
 	
 	foreach ($temp_array as $temp) {
@@ -901,14 +951,17 @@ function get_not_all_buildings_all_types_result($query, $resource_types, $buildi
  *
  * @return Human-readable result
  */
-function get_not_all_buildings_not_all_types_result($query, $resource_types, $buildings, $resource_type) {
+function get_not_all_buildings_not_all_types_result($query, 
+	$resource_types, $buildings, $resource_type) {
+	
 	$resource_result = '';
 	$resources_so_far = array();
 	$rt_object = $resource_types[$resource_type];
 	$frn_value = $rt_object->get_room_number_field();
 	foreach($query as $r) {
 		$resource = $r->$frn_value;
-		append_not_all_resource_types_query_result($resource_result, $resource, $resources_so_far);
+		append_not_all_resource_types_query_result($resource_result, 
+			$resource, $resources_so_far);
 	}
 	return $resource_result;
 }
@@ -930,13 +983,18 @@ function get_not_all_buildings_not_all_types_result($query, $resource_types, $bu
  * @return 0 if no resources of this type exist in the building, >0 otherwise.
  */
 
-function building_has_resource_type_query($building_name, $rt_object, $all_types, $resource_types, $resource_type) {
-	$fbld_field = $rt_object->get_building_field();
-	$fbld_table = $rt_object->get_building_table();
-	$rt_machine_name = $rt_object->get_machine_name();
+function building_has_resource_type_query($building_name, $rt_object, 
+	$all_types, $resource_types, $resource_type) {
+	
+	$fbld_field = mysql_real_escape_string($rt_object->get_building_field());
+	$fbld_table = mysql_real_escape_string($rt_object->get_building_table());
+	$rt_machine_name = mysql_real_escape_string($rt_object->get_machine_name());
+	$building_name = mysql_real_escape_string($building_name);
 	$count = 0;
-	$building_query = "SELECT COUNT(entity_id) AS cnt 
-		FROM " . $fbld_field . " WHERE " . $fbld_field . " = '" . $building_name . "'";
+	
+	$building_query = 
+		"SELECT COUNT(entity_id) AS cnt 
+		FROM  $fbld_field WHERE $fbld_field = '$building_name'";
 	if (!$all_types) {
 		foreach ($resource_types[$resource_type]->get_buildings() as $b) {
 			if ($b->get_name() == $building_name && $b->get_auth_display() == 0)
@@ -947,7 +1005,8 @@ function building_has_resource_type_query($building_name, $rt_object, $all_types
 		$building_query .= " AND (";
 		foreach ($resource_types as $rt => $object) {
 			if ($object->get_auth_display() == 1)
-				$building_query .= "bundle = '" . $object->get_machine_name() . "' OR ";
+				$building_query .= "bundle = '" . 
+				mysql_real_escape_string($object->get_machine_name()) . "' OR ";
 		}
 		$building_query = substr($building_query, 0, -4) . ")"; // trim off last " OR ";
 	}
@@ -1000,9 +1059,11 @@ function round_to_nearest_15_minutes($some_date, $noworlater, $date_format) {
 	$the_date = '';
 	$minutes = $the_time % $rounded_numerator;
 	if ($minutes <= 7 * 60) {
-		$the_date = date($date_format, $the_time - $the_time % $rounded_numerator);
+		$the_date = 
+			date($date_format, $the_time - $the_time % $rounded_numerator);
 	} else {
-		$the_date = date($date_format, $the_time + 15 * 60 - $the_time % $rounded_numerator);
+		$the_date = 
+			date($date_format, $the_time + 15 * 60 - $the_time % $rounded_numerator);
 	}
 	return $the_date;
 }
@@ -1011,7 +1072,8 @@ function round_to_nearest_15_minutes($some_date, $noworlater, $date_format) {
  * Constructs an associative array of ResourceType => Pair<string, string>, 
  * specifically ResourceType => Pair<'<br>', ResourceType->get_title()>
  *
- * @param $resource_types The array of resource types (see resource type initializer function)
+ * @param $resource_types The array of resource types 
+ * (see resource type initializer function)
  *
  * @return the aforementioned associative array.
  */
@@ -1033,8 +1095,10 @@ function make_machine_name_string_title_pair($resource_types) {
  * @param $rtype The resource type as returned by the query (machine_name)
  * @param $ender The ender string for the result
  */
-function append_all_resource_types_query_result(&$temp_array, $resource, $rtype, $ender, &$resources_so_far) {
- 	$current_result = $temp_array[$rtype]->get_first();
+function append_all_resource_types_query_result(&$temp_array, 
+	$resource, $rtype, $ender, &$resources_so_far) {
+ 	
+	$current_result = $temp_array[$rtype]->get_first();
 	if ($current_result == '') {
 		array_push($resources_so_far, $resource);
 		$temp_array[$rtype]->set_first(
@@ -1047,13 +1111,16 @@ function append_all_resource_types_query_result(&$temp_array, $resource, $rtype,
 	} 
 }
 
-function append_not_all_resource_types_query_result(&$resource_result, $resource, &$resources_so_far) {
+function append_not_all_resource_types_query_result(&$resource_result, 
+	$resource, &$resources_so_far) {
+	
 	if (strlen($resource_result) > 0)	{
 		if (in_array($resource, $resources_so_far)) return;
 		array_push($resources_so_far, $resource);
 		$resource_result .=  ', ' . $resource;
 		return;
 	}
+	
 	array_push($resources_so_far, $resource);
 	$resource_result .= $resource;
 }
@@ -1091,8 +1158,10 @@ function is_available_block_info() {
  */
 function is_available_block_configure($delta = '', $multi_id = NULL) {
 	if ($delta != RESOURCE_SEARCH && $delta != 'room_search') {
-		drupal_set_message("If you can read this, the resource settings have not loaded.
-			Your block delta: " . $delta . " may have changed -- please check your settings.", "error");
+		drupal_set_message("If you can read this, 
+			the resource settings have not loaded.
+			Your block delta: " . $delta . " may have changed -- 
+			please check your settings.", "error");
 		return;
 	}
 	
@@ -1103,7 +1172,8 @@ function is_available_block_configure($delta = '', $multi_id = NULL) {
 	
 	$form[$setting_key] = array(
 		'#type' 					=> 'radios',
-		'#title' 					=> t('Setting Options (set in /admin/config/is_available/settings)'),
+		'#title' 					=> t('Setting Options (set in 
+			/admin/config/is_available/settings)'),
 		'#options' 				=> $setting_options,
 		'#default_value' 	=> variable_get($setting_key, key($setting_options)),
 	);
@@ -1120,7 +1190,8 @@ function is_available_block_save($delta = '', $edit = array()) {
 
 	if ($delta != RESOURCE_SEARCH && $delta != 'room_search') {
 		drupal_set_message("Your resource settings were not saved -- your block 
-			delta is " . $delta . ", and it may have changed -- please check your settings.", "error");
+			delta is " . $delta . ", and it may have changed -- 
+			please check your settings.", "error");
 		return;
 	}
 	$form_object 		= new IsAvailableAdminSettingsForm;
@@ -1154,7 +1225,8 @@ function is_available_block_view($delta = '', $multi_id = NULL) {
 	
 	$block = array(
 		'subject' => t('Search for vacancy'),
-		'content' => drupal_get_form('is_available_resource_search_form', $array_et, $multi_id),
+		'content' => drupal_get_form('is_available_resource_search_form', 
+			$array_et, $multi_id),
 	); 
 	
 	return $block;
@@ -1163,24 +1235,27 @@ function is_available_block_view($delta = '', $multi_id = NULL) {
 function get_radios_setting_options($multi_id) {
 	$form_object = new IsAvailableAdminSettingsForm;
 	$module_name = $form_object->get_module_name();
-	$leading_str = $module_name . '_settings_title_';
+	$leading_str = mysql_real_escape_string($module_name . '_settings_title_');
 	$leading_str_strlen = strlen($leading_str);
 	$alpha			 = $form_object->get_alphabet();
 	$i		 			 = $form_object->get_settings_count();
 	$ret_array	 = array();
 
-	$query1 = db_query("SELECT name FROM variable WHERE name LIKE '" . $leading_str . "%'");
+	$query1 = 
+		db_query("SELECT name FROM variable WHERE name LIKE '$leading_str%'");
 	foreach ($query1 as $q) {
 		$sid = substr($q->name, $leading_str_strlen);
 	
-		$query2 = db_query("SELECT COUNT(name) as cnt FROM variable WHERE name LIKE '" .
-			$module_name . "_%" . $sid . "%'");
+		$query2 = 
+			db_query("SELECT COUNT(name) as cnt FROM variable WHERE name LIKE '" .
+			mysql_real_escape_string($module_name . "_%" . $sid . "%") . "'");
 		$sid_count = 0;
 		foreach ($query2 as $q2) {
 			$sid_count = $q2->cnt;
 		}
 		if ($sid_count >= 9)
-		$ret_array[$sid] = variable_get($leading_str . $sid, 'Setting ' . strtoupper($sid));
+		$ret_array[$sid] = 
+			variable_get($leading_str . $sid, 'Setting ' . strtoupper($sid));
 	}
 	
 	return $ret_array;
@@ -1201,7 +1276,9 @@ function get_radios_setting_options($multi_id) {
 	* @param $array_rt Array of resource types
 	* @param $array_buildings Array of buildings to search over
 	*/
-function initialize_resource_types_and_buildings_and_options($array_et, &$array_rt,	&$array_rt_options, &$array_buildings, &$array_building_options, &$array_fbld_field, &$array_frn_field, $all) {
+function initialize_resource_types_and_buildings_and_options($array_et, 
+	&$array_rt,	&$array_rt_options, &$array_buildings, &$array_building_options, 
+	&$array_fbld_field, &$array_frn_field, $all) {
 	
 	// "- All-" by default is always first.
 	$array_rt = array(); // clear the existing rt and building arrays
@@ -1216,22 +1293,32 @@ function initialize_resource_types_and_buildings_and_options($array_et, &$array_
 	$rt_i = 0;
 	$bldg_j = 0;
 	foreach ($array_et as $et_machine_name => $et_object) {
-		foreach ($et_object->get_resource_types() as $rt_machine_name => $rt_object) {
+		foreach ($et_object->get_resource_types() 
+			as $rt_machine_name => $rt_object) {
+			
 			$rt_mn = $rt_object->get_machine_name();
 			$fbld = $rt_object->get_field_building();
 			$frn = $rt_object->get_field_room_number();
+			
 			if (!array_key_exists($rt_mn, $array_rt)) {
 				$array_rt[$rt_mn] = $rt_object;
 				$array_rt_options[$rt_object->get_str_id()] = $rt_object->get_title();
-				if (!in_array($fbld, $array_fbld_field)) $array_fbld_field["FBLD" . $bldg_j++] = $fbld;
-				if (!in_array($frn, $array_frn_field))	$array_frn_field["FRN" . $rt_i++] = $frn;
+				
+				if (!in_array($fbld, $array_fbld_field)) 
+					$array_fbld_field["FBLD" . $bldg_j++] = $fbld;
+				
+				if (!in_array($frn, $array_frn_field))	
+					$array_frn_field["FRN" . $rt_i++] = $frn;
+				
 				foreach ($rt_object->get_buildings() as $bldg_name => $bldg_object) {
 					$bldg_str_id = $bldg_object->get_str_id();
-					if (!array_key_exists($bldg_str_id, $array_buildings)) {
+				
+				if (!array_key_exists($bldg_str_id, $array_buildings)) {
 						$array_buildings[$bldg_str_id] = $bldg_object;
 						$array_building_options[$bldg_str_id] = $bldg_object->get_name();
 					}
 				}
+
 			}
 		}
 	}
@@ -1248,7 +1335,8 @@ function block_view_get_entity_types($setting_id, $form_object) {
 	// e.g. is_available_entity_type_a_space
 	$module_name			= $form_object->get_module_name();
 	$key_entity_type	= $form_object->get_key_entity_type();
-	$key_entity_type 	= $module_name . '_' . $key_entity_type . '_' . $setting_id . '_';
+	$key_entity_type 	= 
+		$module_name . '_' . $key_entity_type . '_' . $setting_id . '_';
 	$leading_strlen		= strlen($key_entity_type);
 	$ret_array 				= array();
 	
@@ -1258,8 +1346,10 @@ function block_view_get_entity_types($setting_id, $form_object) {
 			// construct entitytype objects out of all the auth'd entity types
 			if (variable_get($q1->name, 0) == 1) {
 				$et_machine_name = substr($q1->name, $leading_strlen);
-				$et_label = block_view_helper_get_label('eck_entity_type', $et_machine_name);
-				$ret_array[$et_machine_name] = new EntityTaipe($et_machine_name, $et_label);
+				$et_label = 
+					block_view_helper_get_label('eck_entity_type', $et_machine_name);
+				$ret_array[$et_machine_name] = 
+					new EntityTaipe($et_machine_name, $et_label);
 			}
 		}
 	}
@@ -1269,14 +1359,17 @@ function block_view_get_entity_types($setting_id, $form_object) {
 /**
  * (arrayof string => EntityTaipe) -> (void)
  */
-function block_view_get_resource_types(&$array_et_objects, $setting_id, $form_object) {
+function block_view_get_resource_types(&$array_et_objects, 
+	$setting_id, $form_object) {
 	// is_available_resource_type_a_space_meeting_resource
 	$module_name		= $form_object->get_module_name();
 	$key_resource_type	= $form_object->get_key_resource_type();
-	$key_resource_type 	= $module_name . '_' . $key_resource_type . '_' . $setting_id . '_';
+	$key_resource_type 	= 
+		$module_name . '_' . $key_resource_type . '_' . $setting_id . '_';
 	
 	if (empty($array_et_objects)) {
-		drupal_set_message('Error: No selected entity types detected. Please check your settings.', 'error');
+		drupal_set_message('Error: No selected entity types detected. 
+			Please check your settings.', 'error');
 		return;
 	}
 
@@ -1289,9 +1382,12 @@ function block_view_get_resource_types(&$array_et_objects, $setting_id, $form_ob
 			foreach ($query1 as $q1) {
 				if (variable_get($q1->name, 0) == 1) {
 					$rt_machine_name = substr($q1->name, $leading_strlen);
-					$rt_label = block_view_helper_get_label('eck_bundle', $rt_machine_name);
-					$resource_type = new ResourceType($rt_machine_name, array(), $rt_label); 
-					configure_resource_type($resource_type, $et_machine_name, $setting_id, $form_object);
+					$rt_label = 
+						block_view_helper_get_label('eck_bundle', $rt_machine_name);
+					$resource_type = 
+						new ResourceType($rt_machine_name, array(), $rt_label); 
+					configure_resource_type($resource_type, $et_machine_name, 
+						$setting_id, $form_object);
 					$array_resource_types[$rt_machine_name] = $resource_type;
 				}
 			}
@@ -1300,10 +1396,15 @@ function block_view_get_resource_types(&$array_et_objects, $setting_id, $form_ob
 	}
 }
 
-function configure_resource_type(&$rt_object, $et_machine_name, $setting_id, $form_object) {
-	block_view_get_rt_brn_table($rt_object, $et_machine_name, $setting_id, $form_object);
-	block_view_get_auth_buildings($rt_object, $et_machine_name, $setting_id, $form_object);
-	block_view_get_entref_date_tables($rt_object, $et_machine_name, $setting_id, $form_object);
+function configure_resource_type(&$rt_object, $et_machine_name, 
+	$setting_id, $form_object) {
+	
+	block_view_get_rt_brn_table($rt_object, $et_machine_name, 
+		$setting_id, $form_object);
+	block_view_get_auth_buildings($rt_object, $et_machine_name, 
+		$setting_id, $form_object);
+	block_view_get_entref_date_tables($rt_object, $et_machine_name, 
+		$setting_id, $form_object);
 }
 
 function block_view_get_rt_brn_table(&$rt_object, $et_machine_name, $setting_id, $form_object) {
@@ -1334,7 +1435,8 @@ function block_view_get_auth_buildings(&$rt_object, $et_machine_name, $setting_i
 	$query = block_view_helper_get_varname_like_query($key_auth_building);
 	
 		if (empty($query)) {
-			drupal_set_message('Error: No selected buildings detected. Please check your settings.', 'error');
+			drupal_set_message('Error: No selected buildings detected. 
+				Please check your settings.', 'error');
 			return;
 	}
 	
@@ -1373,8 +1475,8 @@ function block_view_get_entref_date_tables(&$rt_object, $et_machine_name, $setti
 	}
 	
 	if (empty($array_entref_date)) {
-		drupal_set_message('Error: Entity reference or date table selection not detected. 
-			Please check your settings.', 'error');
+		drupal_set_message('Error: Entity reference or date table 
+			selection not detected. Please check your settings.', 'error');
 		return;
 	}
 	
@@ -1383,7 +1485,9 @@ function block_view_get_entref_date_tables(&$rt_object, $et_machine_name, $setti
 		
 	
 
-function block_view_get_content_types(&$rt_object, $et_machine_name, $setting_id, $form_object) {
+function block_view_get_content_types(&$rt_object, $et_machine_name, 
+	$setting_id, $form_object) {
+	
 	// is_available_content_type_space_meeting_resource_a_event
 	$module_name 			= $form_object->get_module_name();
 	$key_content_type	= $form_object->get_key_content_type();
@@ -1395,8 +1499,8 @@ function block_view_get_content_types(&$rt_object, $et_machine_name, $setting_id
 	
 	if (empty($query)) {
 		drupal_set_message('Error: No selected content types detected for ' . 
-			convert_to_readable_name($et_machine_name) . ': ' .$rt_object->get_title() 
-			. '. Please check your settings.', 'error');
+			convert_to_readable_name($et_machine_name) . ': ' .
+			$rt_object->get_title() . '. Please check your settings.', 'error');
 		return array();
 	}
 	
@@ -1418,7 +1522,8 @@ function block_view_helper_get_varname_like_query($term) {
 	$term .= '%';
 	$term = mysql_real_escape_string($term);
 
-	return db_query("SELECT name FROM variable WHERE name LIKE :term", array(':term' => $term));
+	return db_query("SELECT name FROM variable WHERE name LIKE :term", 
+		array(':term' => $term));
 }
 
 /**
@@ -1426,7 +1531,9 @@ function block_view_helper_get_varname_like_query($term) {
  */
 function block_view_helper_get_label($table, $machine_name) {
 	$ret_str = '';
-	$query = db_query("SELECT label FROM " . $table . " WHERE name = '" . $machine_name . "'");
+	$table = mysql_real_escape_string($table);
+	$machine_name = mysql_real_escape_string($machine_name);
+	$query = db_query("SELECT label FROM $table WHERE name = '$machine_name'");
 	foreach ($query as $q) {
 		$ret_str = $q->label;
 	}

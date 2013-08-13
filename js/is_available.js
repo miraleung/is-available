@@ -1,20 +1,100 @@
 $(function () {
 	$(document).ready(function() {
+	
 		/* Admin block settings form */
 		$('#edit-settings-options').after($('#delete-setting-button'));
 		$('#edit-settings-options').after($('#add-setting-button'));
 		$('#edit-settings-options').after($('#configure-setting-button'));
+		$('div[id^="configure-"]').attr('style', 'clear: both;');
 
+		/* Hide previous form stage elements */
+		Drupal.behaviors.is_available = {
+			attach: function (context, settings) {
+			 
+				$("div#configure-resource-type").mouseenter(function() {
+						if ($(this).find('div').length > 1) {
+								$(this).attr('style', 'clear: both;');
+								$(this).prev('#configure-title-entity-type').hide();
+								$('div#console').children('.messages.error').hide();
+						}
+				});
+				$("div#configure-resource-type").mouseleave(function() {
+						 $(this).parent().children('div.messages.error').hide();
+				});
+				
+
+				$("div#configure-building").mouseenter(function() {
+						if ($(this).find('fieldset').length > 0) {
+								$(this).parent().find('p#step-2').hide();
+								$(this).parent().find('#resource-types').hide();
+								$(this).parent().find('div[style="display: block"]').hide();
+								$('div#console').children('.messages.error').hide();
+						}
+				});
+				$("div#configure-building").mouseleave(function() {
+						$(this).parent().find('div.messages.error').hide();
+				});
+				
+
+				$("div#configure-auth-building").mouseenter(function() {
+						if ($(this).find('fieldset').length > 0) {
+								$(this).parent().parent().find('p#step-3').hide();
+								$(this).prev('fieldset').hide();
+								$('div#console').children('.messages.error').hide();
+						}
+				});
+				$("div#configure-auth-building").mousedown(function() {
+						$(this).parent().find('div.messages.error').hide();
+				});
+				
+				$("div#configure-entref").mouseenter(function() {
+						if ($(this).find('fieldset').length > 0) {
+								$(this).parent().parent().find('p#step-4').hide();
+								$(this).parent().find('fieldset[id^="edit-is-available-auth-building-"]').hide();
+								$(this).parent().find('fieldset[id^="edit-is-available-content-type-"]').hide();
+								$('div#console').children('.messages.error').hide();
+						}
+				});
+				$("div#configure-entref").mousedown(function() {
+						$(this).parent().find('div.messages.error').hide();
+				});
+				
+				$("div#configure-date-table").mouseenter(function() {
+						if ($(this).find('fieldset').length > 0) {
+								$(this).parent().find('p#step-5').hide();
+								$(this).parent().find('fieldset[id^="edit-entref-"]').hide();
+								$('div#console').children('.messages.error').hide();
+						}
+				});
+				$("div#configure-date-table").mousedown(function() {
+						$(this).parent().find('div.messages.error').hide();
+				});
+				
+				$("div#edit-actions").mouseenter(function() {
+						if ($(this).find('input#edit-submit').length > 0) {
+								$(this).parent().find('p#step-6').hide();
+								$(this).parent().find('fieldset[id^="edit-is-available-date-"]').hide();
+								$('div#console').children('.messages.error').hide();
+						}
+				});
+				$("div#edit-actions").mousedown(function() {
+						$(this).parent().children('div.messages.error').hide();
+				});
+			}
+		};
+
+
+		/* Resource search form*/
+		// CSS for the datepicker/time fields
 		$('.cal-popup-start').css('width', '100%');
 		$('.form-item-cal-popup-start').css('width','100%');
 		$("div[id^='edit-cal-popup-start']").css('width', '100%');
-		//$(".form-item-cal-popup-start-time > label").hide();
 		$('.cal-popup-end').css('width', '100%');
 		$('.form-item-cal-popup-end').css('width','100%');
 		$("div[id^='edit-cal-popup-end']").css('width', '100%');
-		//$(".form-item-cal-popup-end-time > label").hide();
+		$('div[id^="available-resources-"]').find('p').attr("style", "clear: both;");
 
-		/* Resource search form*/
+		// Resize time fields and hide description label
 		$('input.form-text.hasTimeEntry').css('width', '100% !important');
 		var sTimeWrap = $(".form-item-cal-popup-start-time");
 		var eTimeWrap = $(".form-item-cal-popup-end-time");
@@ -30,20 +110,22 @@ $(function () {
 
 		// Resize the date/time fields
 		$('.form-item-cal-popup-start-time').each(function() {
-			$(this).parent().prev().attr("style", "width: 50%; margin-bottom: -2px;");
-			$(this).prev().find("input[name='cal_popup_start[date]']").attr("style", "height: 27px !important");
-			$(this).find("input[id^='edit-cal-popup-start-']").attr("style", "height: 28px !important");
-			$(this).parents().eq(3).next().find("input[class='hasDatePicker']").attr("style", "height: 27px !important");
-			$(this).parents().eq(3).next().find("input[name='cal_popup_end[time]']").attr("style", "height: 27px !important");
-			var region = $(this).parents().eq(9);
-			if (region.attr('class').substr(0, 21) == 'region region-sidebar') {
-					region.find('.form-item-cal-popup-start-time').attr('style', 'margin: -15px 0 0 0px !important');
-					region.find('.form-item-cal-popup-end-time').attr('style', 'margin: -16px 0 0 0px !important');
-			} else if (region.attr('class') == 'region region-content') {
-					region.find('.form-item-cal-popup-start-time').attr('style', 'margin: -17px 0 0 0px !important');
-					region.find('.form-item-cal-popup-end-time').attr('style', 'margin: -19px 0 0 0px !important');
-			}
+		$(this).parent().prev().attr("style", "width: 50%; margin-bottom: -2px;");
+		$(this).prev().find("input[name='cal_popup_start[date]']").attr("style", "height: 27px !important");
+		$(this).find("input[id^='edit-cal-popup-start-']").attr("style", "height: 27px !important");
+		$(this).parents().eq(3).next().find("input[class='hasDatePicker']").attr("style", "height: 27px !important");
+		$(this).parents().eq(3).next().find("input[name='cal_popup_end[time]']").attr("style", "height: 27px !important");
+		var region = $(this).parents().eq(9);
+		if (region.attr('class').substr(0, 21) == 'region region-sidebar') {
+				region.find('.form-item-cal-popup-start-time').attr('style', 'margin: -15px 0 0 0px !important');
+				region.find('.form-item-cal-popup-end-time').attr('style', 'margin: -16px 0 0 0px !important');
+		} else if (region.attr('class') == 'region region-content') {
+				region.find('.form-item-cal-popup-start-time').attr('style', 'margin: -17px 0 0 0px !important');
+				region.find('.form-item-cal-popup-end-time').attr('style', 'margin: -19px 0 0 0px !important');
+		}
 		});
+
+
 
 		/* Start date/time onblur handler */
 		$("input[id^='edit-cal-popup-start-']").focusout(function() {
@@ -211,6 +293,6 @@ $(function () {
 						hr = 0;
 				return hr;
 		}
-
+		
 	});
 })(jQuery);
