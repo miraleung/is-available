@@ -149,7 +149,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	// Resource type
  	$form[$key]['type'] = array(
 		'#type' => 'select',
-		'#title' => t('Resource type'),
+		'#title' => t('Room type'),
 		'#default_value' => $resource_type_options,
 		'#options' => $resource_type_options,
 		'#ajax' => array( // autosubmit to get buildings onChange
@@ -781,7 +781,7 @@ function get_empty_resource_query_result($mysql_query, $building_name, $start_ti
 	$end_time, $resource_type, &$resource_types, &$buildings,  $all_types, $all_buildings, $get_result = 1) {
 
 	$type = $all_types ? 
-		"resource types" : $resource_types[$resource_type]->get_plural_name();
+		"room types" : $resource_types[$resource_type]->get_plural_name();
 	$header = 'Available ' . $type;
 	$resource_result = '';
 	$result = '';
