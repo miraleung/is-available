@@ -1,6 +1,6 @@
 $(function () {
 	$(document).ready(function() {
-	
+
 		/* Admin block settings form */
 		$('#edit-settings-options').after($('#delete-setting-button'));
 		$('#edit-settings-options').after($('#add-setting-button'));
@@ -39,7 +39,11 @@ $(function () {
 				$("div#configure-auth-building").mouseenter(function() {
 						if ($(this).find('fieldset').length > 0) {
 								$(this).parent().parent().find('p#step-3').hide();
-								$(this).prev('fieldset').hide();
+								$(this).siblings().each(function() {
+										if ($(this).get(0).tagName == "FIELDSET") {
+												$(this).hide();
+										}
+								});
 								$('div#console').children('.messages.error').hide();
 						}
 				});
@@ -293,6 +297,6 @@ $(function () {
 						hr = 0;
 				return hr;
 		}
-		
+	
 	});
 })(jQuery);

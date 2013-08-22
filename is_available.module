@@ -1,11 +1,13 @@
+
 <?php
 
 /**
  * @file
- * A block module that displays resources for CS event bookings.
- * 
- * To add a building/resource type, or change the order of the elements in 
- * the dropdown, update the array in the relevant initializer function.
+ * Block resource search form.
+ *
+ * Note: If you are getting database errors, your search form block may be referring to an
+ * undefined block setting. Please check your settings at admin/config/is_available and
+ * in the block configurations for Is Available under Structure->Blocks.
  */
 
 /* Error reporting */
@@ -74,16 +76,16 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 		return;
 	}
 	
-	$resource_types 				= array(); // array($rt_machine_name => ResourceType object)
-	$resource_type_options	= array(); // array($rt_str_id			 => $rt_object->get_title())
-	$buildings 							= array(); // array($bldg_str_id		 => Building object)
-	$all_building_options 	= array(); // array($bldg_str_id		 => $bldg_object->get_name())
+	$resource_types 				= array(); // array($rt_machine_name => IsAvailableResourceType object)
+	$resource_type_options	= array(); // array($rt_str_id			 => $rt_object->_is_available_get_title())
+	$buildings 							= array(); // array($bldg_str_id		 => IsAvailableBuilding object)
+	$all_building_options 	= array(); // array($bldg_str_id		 => $bldg_object->_is_available_get_name())
 	$array_fbld_field 			= array(); // array(FBLD$i 					 => field_building_field_name)
 	$array_frn_field				= array(); // array(FRN$i 					 => field_resource_number_field_name)
 	
 	$all = '- All -';
 	
-	initialize_resource_types_and_buildings_and_options($array_et, $resource_types, $resource_type_options, $buildings, $all_building_options, $array_fbld_field, $array_frn_field, $all);
+	_is_available_initialize_resource_types_and_buildings_and_options($array_et, $resource_types, $resource_type_options, $buildings, $all_building_options, $array_fbld_field, $array_frn_field, $all);
 	
 	// if it has only the - All - option, return
 	if (sizeof($resource_type_options) <= 1 || empty($resource_types)) { 
@@ -108,11 +110,11 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	// $query_date_format = 'Y-m-d H:i';
 	$current_time = date($date_format);
 	$current_time_rounded = 
-		round_to_nearest_15_minutes($current_time, 0, $date_format); 
+		_is_available_round_to_nearest_15_minutes($current_time, 0, $date_format); 
 	$current_time_plus_hour = date($date_format, time() + 3600);
 	$current_time_plus_hour_rounded = 
-		round_to_nearest_15_minutes($current_time_plus_hour, 1, $date_format); 
-	dpm($current_time);
+		_is_available_round_to_nearest_15_minutes($current_time_plus_hour, 1, $date_format); 
+	// dpm($current_time);
 	// Set the calendar
 	if (!isset($form_state['values']['cal_popup_start']))
 		$form_state['values']['cal_popup_start'] = $current_time_rounded;
@@ -130,7 +132,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	$value_resource_type = isset($form_state['values']['type']) ? 
 		$form_state['values']['type'] : key($resource_type_options);
 	$dropdown_building_options = isset($form_state['values']['type']) ? 
-		get_dropdown_building_options($resource_types, $value_resource_type, 
+		_is_available_get_dropdown_building_options($resource_types, $value_resource_type, 
 		$all_building_options, $all) : $all_building_options;
 	$value_dropdown_building = isset($form_state['values']['building_name']) ? 
 		$form_state['values']['building_name'] : key($dropdown_building_options);
@@ -141,13 +143,12 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 			$array_fbld_field, $array_frn_field, $all,
 			$date_format); 
 		
-	$key = 'search';;
 	// Markup the form
-	$form[$key]['#prefix'] = '<div class="search-form-' . $multi_id. '">';
-	$form[$key]['#suffix'] = '</div>';
+	$form['#prefix'] = '<div class="search-form-' . $multi_id. '">';
+	$form['#suffix'] = '</div>';
 	
 	// Resource type
- 	$form[$key]['type'] = array(
+ 	$form['type'] = array(
 		'#type' => 'select',
 		'#title' => t('Resource type'),
 		'#default_value' => $resource_type_options,
@@ -163,8 +164,8 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 		'#suffix' => '</div>',
 	);
 	
-	// Building options
-	$form[$key]['building_name'] = array(
+	// IsAvailableBuilding options
+	$form['building_name'] = array(
 		'#type' => 'select',
 		'#title' => t('Building'),
 		'#options' => $dropdown_building_options,
@@ -174,7 +175,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	);
 
 	// Start date/time
-	$form[$key]['cal_popup_start'] = array(
+	$form['cal_popup_start'] = array(
 		'#type' => 'date_popup', 
 		'#date_format' => 'Y-m-d h:iA',
 		'#title' => t('Start Date'),
@@ -191,7 +192,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 		);
 	
 	// End date/time
-	$form[$key]['cal_popup_end'] = array(
+	$form['cal_popup_end'] = array(
 	'#title' => t('End Date'), 
 	'#type' => 'date_popup', 
 	'#date_format' => 'Y-m-d h:iA',
@@ -208,7 +209,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	);
 	
 		// "Check for availability" button
- 	$form[$key]['check_availability'] = array(
+ 	$form['check_availability'] = array(
 		'#type' => 'button',
 		'#value' => t('Search'),
 		'#button_type' => 'submit ajax-trigger',
@@ -216,7 +217,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 			'submitter' => FALSE,
 			'callback' => 'ajax_available_resources_callback', 
 			'event' => 'mousedown',
-			'wrapper' => 'search-form-' . $multi_id,
+			'wrapper' => 'available-resources-' . $multi_id,
 			'method' => 'replace',
 			'effect' => 'fade',
 		),  
@@ -225,7 +226,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	);
 
 	// Available resources display (result)
-	$form[$key]['available_resources'] = array(
+	$form['available_resources'] = array(
 		'#markup' =>  '<p>' . $value_available_resources	. '</p>',
 		'#prefix' => '<div id="available-resources-' . $multi_id . '">',
 		'#suffix' => '</div>',
@@ -266,7 +267,7 @@ function is_available_resource_type_options(&$resource_types) {
 	$resource_type_options = array();
 	foreach ($resource_types as $rt) {
 		if ($rt->get_auth_display() == 1) {
-			$resource_type_options[$rt->get_str_id()] = t($rt->get_title());
+			$resource_type_options[$rt->_is_available_get_str_id()] = t($rt->_is_available_get_title());
 		}
 	}
 	return $resource_type_options;
@@ -280,7 +281,7 @@ function is_available_resource_type_options(&$resource_types) {
 function is_available_building_options(&$buildings) { 
 	$building_options = array();
 	foreach ($buildings as $b) {
-		$building_options[$b->get_str_id()] = t($b->get_name());
+		$building_options[$b->_is_available_get_str_id()] = t($b->_is_available_get_name());
 	}
 	return $building_options;
 }
@@ -288,7 +289,7 @@ function is_available_building_options(&$buildings) {
 /**
  * Get the building options based on the current resource type.
  */
-function get_dropdown_building_options($resource_types, 
+function _is_available_get_dropdown_building_options($resource_types, 
 	$value_resource_type, $all_building_options, $all) {
 	
  	if ($value_resource_type == $all || empty($resource_types) ||
@@ -298,11 +299,11 @@ function get_dropdown_building_options($resource_types,
 	}
 	
 	$building_options = array();
-	$resource_buildings = $resource_types[$value_resource_type]->get_buildings();
+	$resource_buildings = $resource_types[$value_resource_type]->_is_available_get_buildings();
 	if (sizeof($resource_buildings) > 1) $building_options[$all] = $all;
 	
 	foreach ($resource_buildings as $bldg_name => $object)
-		$building_options[$bldg_name] = $object->get_name();
+		$building_options[$bldg_name] = $object->_is_available_get_name();
 	return $building_options;
 }
 
@@ -343,7 +344,7 @@ function is_available_available_resources($building_id, $building_options, $star
 	
 	if ($resource_type != $all) {
 		foreach ($array_et as $et_machine_name => $et_object) {
-			$type = array_search($resource_type, $et_object->get_resource_types());
+			$type = array_search($resource_type, $et_object->_is_available_get_resource_types());
 			if (!empty($type)) break;
 		}
 	} else 
@@ -364,7 +365,7 @@ function is_available_available_resources($building_id, $building_options, $star
 			$start_time . ' ' . $end_time;
 	} else {
 		$result = 
-			execute_query($building_name, $start_time, $end_time, 
+			_is_available_execute_query($building_name, $start_time, $end_time, 
 			$resource_type, $array_et, $all,
 			$resource_types, $array_fbld_field, $array_frn_field, $date_format);
 	}
@@ -372,7 +373,7 @@ function is_available_available_resources($building_id, $building_options, $star
 }
 
 /**
- * string string string string (arrayof EntityTaipe) string -> string
+ * string string string string (arrayof IsAvailableEntityTaipe) string -> string
  * Builds and executes the available-resource query.
  *
  * @param $building_name The human-readable name of the building
@@ -384,24 +385,24 @@ function is_available_available_resources($building_id, $building_options, $star
  *
  * @return $result Human-readable string result of the query. 
  */
-function execute_query($building_name, $start_time, $end_time, 
+function _is_available_execute_query($building_name, $start_time, $end_time, 
 	$resource_type, $array_et, $all,
 	$resource_types, $array_fbld_field, $array_frn_field, $date_format) {
 	
 	$all_resources = ($resource_type == $all);
 	$all_buildings = ($building_name == $all);
 	$query_object = 
-		get_empty_resource_query_object($building_name, $start_time, $end_time, 
+		_is_available_get_empty_resource_query_object($building_name, $start_time, $end_time, 
 		$resource_type, $array_et, $resource_types, $array_fbld_field, 
 		$array_frn_field,	$all_resources, $all_buildings, $date_format);
 	
-	$drop_temp_query = $query_object->get_drop_temp();
-	$create_temp_query = $query_object->get_create_temp();
-	$mysql_query = $query_object->get_main_query();
+	$drop_temp_query = $query_object->_is_available_get_drop_temp();
+	$create_temp_query = $query_object->_is_available_get_create_temp();
+	$mysql_query = $query_object->_is_available_get_main_query();
 	$get_result = 1;
 	
 	if (!is_string($mysql_query)) $get_result = $mysql_query;
-	else if (trim($mysql_query) == "") $get_result = -2;	
+	elseif (trim($mysql_query) == "") $get_result = -2;	
 
 	if ($get_result == 1) {
 		db_query($drop_temp_query);
@@ -413,14 +414,14 @@ function execute_query($building_name, $start_time, $end_time,
 	// -1: All buildings with specific resource type; no such resource type
 	// 0 : specific building & specific resource type;; no such resource in that building 
 	$result = 
-		get_empty_resource_query_result($mysql_query, $building_name, 
+		_is_available_get_empty_resource_query_result($mysql_query, $building_name, 
 		$start_time, $end_time, $resource_type, $resource_types, 
 		$buildings, $all_resources, $all_buildings, $get_result);
 	return $result;
 }
 
 /**
- * string string string string (arrayof EntityTaipe) string -> string
+ * string string string string (arrayof IsAvailableEntityTaipe) string -> string
  * Build up the available-resource query, based on the form input.
  *
  * @param $building_name The human-readable name of the building
@@ -432,14 +433,14 @@ function execute_query($building_name, $start_time, $end_time,
  * 
  * @return $mysql_query The string query, to be executed by another helper.
  */
-function get_empty_resource_query_object($building_name, $start_time, $end_time, $resource_name, $array_et,
+function _is_available_get_empty_resource_query_object($building_name, $start_time, $end_time, $resource_name, $array_et,
 	$resource_types, $array_fbld_field, $array_frn_field, $all_resources, $all_buildings, $date_format) {
 	
 	if (empty($array_et)) {
 		drupal_set_message("Error: No searchable entity types detected. 
 			Please check your settings.", "error");
 		$bldg_check_str = -2;
-		$query_object = new EmptyResourceQuery(0, 0, $bldg_check_str);
+		$query_object = new IsAvailableEmptyResourceQuery(0, 0, $bldg_check_str);
 		return $query_object;
 	}
 	
@@ -448,9 +449,9 @@ function get_empty_resource_query_object($building_name, $start_time, $end_time,
 	$gmt_end_time = gmdate($date_format, strtotime($end_time));
 	
 	$gmt_start_time = mysql_real_escape_string($gmt_start_time . ":00");
-	$gmt_end_time .= mysql_real_escape_string($gmt_end_time . ":00");
+	$gmt_end_time = mysql_real_escape_string($gmt_end_time . ":00");
 	
-	$check = get_bldg_rn_condition_int($all_resources, $all_buildings); 	
+	$check = _is_available_get_bldg_rn_condition_int($all_resources, $all_buildings); 	
 
 	$and_paren =  " AND (";
 	$and_paren_strlen = strlen($and_paren);
@@ -487,45 +488,45 @@ function get_empty_resource_query_object($building_name, $start_time, $end_time,
 	foreach ($array_et as $et_machine_name => $et_object) {
 		$et_i_str = "ET" . $et_i;
 		if ($all_resources) 
-			build_et_select_query_str($et_select_str, $et_i_str);
+			_is_available_build_et_select_query_str($et_select_str, $et_i_str);
 		
-		build_et_inner_join_eb_et_query_str($et_inner_join_str, 
+		_is_available_build_et_inner_join_eb_et_query_str($et_inner_join_str, 
 			$et_where_eb_str, $et_object, $et_i_str);
 
-		if (!$et_object->get_resource_types()) {
+		if (!$et_object->_is_available_get_resource_types()) {
 			drupal_set_message("Error: No searchable resource types detected for " . 
-				$et_object->get_name() . ". Please check your settings.", "error");
+				$et_object->_is_available_get_name() . ". Please check your settings.", "error");
 			$bldg_check_str = -1;
 			break;
 		}
 		
-		foreach ($et_object->get_resource_types() as 
+		foreach ($et_object->_is_available_get_resource_types() as 
 			$rt_machine_name => $rt_object) {
 			// Build building check part of query
 			switch ($check) {
 			case 0: // all rt all b
-				build_all_b_bldg_check($bldg_check_str, $et_i_str, $rt_object, 
+				_is_available_build_all_b_bldg_check($bldg_check_str, $et_i_str, $rt_object, 
 					$array_fbld_field);
 				break;
 			case 1: // all rt specific b
-				build_specific_b_bldg_check($bldg_check_str, $building_name,
+				_is_available_build_specific_b_bldg_check($bldg_check_str, $building_name,
 					$et_i_str, $rt_object, $array_fbld_field, $check);
 				break;
 			case 2: // specific rt all b
-				if ($resource_name == $rt_object->get_machine_name()) {
-					build_all_b_bldg_check($bldg_check_str,	$et_i_str, $rt_object, 
+				if ($resource_name == $rt_object->_is_available_get_machine_name()) {
+					_is_available_build_all_b_bldg_check($bldg_check_str,	$et_i_str, $rt_object, 
 						$array_fbld_field);
 				}
 				break;
 			case 3: // specific rt specific b
-				if ($resource_name == $rt_object->get_machine_name()) {
-					build_specific_b_bldg_check($bldg_check_str, $building_name,
+				if ($resource_name == $rt_object->_is_available_get_machine_name()) {
+					_is_available_build_specific_b_bldg_check($bldg_check_str, $building_name,
 						$et_i_str, $rt_object, $array_fbld_field, $check);
 				}
 				break;
 			}
 			// Build building and resource number inner join table
-			build_fbld_frn_inner_join_str($fbld_frn_inner_join_str, $rt_object, 
+			_is_available_build_fbld_frn_inner_join_str($fbld_frn_inner_join_str, $rt_object, 
 				$array_fbld_been_here, $array_frn_been_here, $array_fbld_field, 
 				$array_frn_field, $et_i_str);
 		}
@@ -538,18 +539,18 @@ function get_empty_resource_query_object($building_name, $start_time, $end_time,
 	// return an integer flag
 	if (!is_string($bldg_check_str)) {
 		$mysql_query = $bldg_check_str; 
-		$query_object = new EmptyResourceQuery(0, 0, $mysql_query);
+		$query_object = new IsAvailableEmptyResourceQuery(0, 0, $mysql_query);
 		return $query_object;
 	}	
 	
 	$temp_table_field = "";
 	// Build the inner nested query (temporary table)
-	build_nested_temp_query($nested_query_temp_table, $temp_table_field, $resource_types, 
+	_is_available_build_nested_temp_query($nested_query_temp_table, $temp_table_field, $resource_types, 
 		$start_time, $end_time);
 		
 	if (!empty($et_select_str)) 
 		$et_select_str = substr($et_select_str, 0, -2) . " ";
-	build_select_str_and_not_in($select_str, $not_in_str, 
+	_is_available_build_select_str_and_not_in($select_str, $not_in_str, 
 		$temp_table_name, $temp_table_field, $array_fbld_field, 
 		$array_frn_field, $et_select_str, $all_resources, $all_buildings);
 	$et_where_eb_str = 
@@ -570,18 +571,18 @@ function get_empty_resource_query_object($building_name, $start_time, $end_time,
 	$mysql_query = 
 		$select_str . $inner_join_where_str . $bldg_check_str . $not_in_str;
 	$query_object = 
-		new EmptyResourceQuery($delete_temp_table, $nested_query_temp_table, 
+		new IsAvailableEmptyResourceQuery($delete_temp_table, $nested_query_temp_table, 
 		$mysql_query);
 	return $query_object;
 }
 
-function get_bldg_rn_condition_int($all_resources, $all_buildings) {
+function _is_available_get_bldg_rn_condition_int($all_resources, $all_buildings) {
 	$check = 0; // all_resources && all_buildings
 	if ($all_resources && !$all_buildings) 
 		$check = 1; // all_resources && specific bldg
-	else if (!$all_resources && $all_buildings) 
+	elseif (!$all_resources && $all_buildings) 
 		$check = 2; // specific resource && all_bldgs
-	else if (!$all_resources && !$all_buildings) 
+	elseif (!$all_resources && !$all_buildings) 
 		$check = 3; // specific resource && specific bldg
 	return $check;
 }
@@ -589,45 +590,45 @@ function get_bldg_rn_condition_int($all_resources, $all_buildings) {
 /**
  * Query builders
  */
-function build_et_select_query_str(&$et_select_str, $et_i_str) {
+function _is_available_build_et_select_query_str(&$et_select_str, $et_i_str) {
 	$et_select_str .= $et_i_str . ".type, ";
 }
 
-function build_et_inner_join_eb_et_query_str(&$et_inner_join_str, &$et_where_eb_str, $et_object, $et_i_str) {
+function _is_available_build_et_inner_join_eb_et_query_str(&$et_inner_join_str, &$et_where_eb_str, $et_object, $et_i_str) {
 	$et_i_str = mysql_real_escape_string($et_i_str);
 	$et_inner_join_str .= "INNER JOIN " . 
-		mysql_real_escape_string($et_object->get_eck_table()) . 
+		mysql_real_escape_string($et_object->_is_available_get_eck_table()) . 
 		" $et_i_str ON " .	$et_i_str . ".type = EB.name ";
 	$et_where_eb_str .= "EB.entity_type = '" . 
-		mysql_real_escape_string($et_object->get_machine_name()) . "' OR ";
+		mysql_real_escape_string($et_object->_is_available_get_machine_name()) . "' OR ";
 }
 
-function build_all_b_bldg_check(&$bldg_check_str, $et_i_str, $rt_object, 
+function _is_available_build_all_b_bldg_check(&$bldg_check_str, $et_i_str, $rt_object, 
 	$array_fbld) {
 	
-	$buildings = $rt_object->get_buildings();
+	$buildings = $rt_object->_is_available_get_buildings();
 	
 	if (empty($buildings)) 
 		return;
 	
-	$fbld_name = mysql_real_escape_string($rt_object->get_field_building());
-	$fbld_table = mysql_real_escape_string(get_field_table($fbld_name));
-	$fbld_field = mysql_real_escape_string(get_field_column($fbld_name));
+	$fbld_name = mysql_real_escape_string($rt_object->_is_available_get_field_building());
+	$fbld_table = mysql_real_escape_string(_is_available_get_field_table($fbld_name));
+	$fbld_field = mysql_real_escape_string(_is_available_get_field_column($fbld_name));
 	$fbld_key = mysql_real_escape_string(array_search($fbld_name, $array_fbld));
 	
 	$bldg_check_str .= "(" . $et_i_str . ".type = '" . 
-		mysql_real_escape_string($rt_object->get_machine_name()) . "' AND (";
+		mysql_real_escape_string($rt_object->_is_available_get_machine_name()) . "' AND (";
 		
-	foreach ($rt_object->get_buildings() as $bldg_str_id => $bldg_object) {
+	foreach ($rt_object->_is_available_get_buildings() as $bldg_str_id => $bldg_object) {
 		$bldg_check_str .= $fbld_key . "." . $fbld_field . " = '" . 
-			mysql_real_escape_string($bldg_object->get_name()) . "' OR ";
+			mysql_real_escape_string($bldg_object->_is_available_get_name()) . "' OR ";
 	}
 	$bldg_check_str = substr($bldg_check_str, 0, -4) . ")) OR ";
 }
 
-function build_specific_b_bldg_check(&$bldg_check_str, $building_name,
+function _is_available_build_specific_b_bldg_check(&$bldg_check_str, $building_name,
 	$et_i_str, $rt_object, $array_fbld_field, $check = 1) {
-	$buildings = $rt_object->get_buildings();
+	$buildings = $rt_object->_is_available_get_buildings();
 	
 	if (!is_string($bldg_check_str) && $check == 3) 
 		return;
@@ -637,23 +638,23 @@ function build_specific_b_bldg_check(&$bldg_check_str, $building_name,
 		return;
 	}
 	
-	$fbld_name = mysql_real_escape_string($rt_object->get_field_building());
-	$fbld_table = mysql_real_escape_string(get_field_table($fbld_name));
-	$fbld_field = mysql_real_escape_string(get_field_column($fbld_name));
+	$fbld_name = mysql_real_escape_string($rt_object->_is_available_get_field_building());
+	$fbld_table = mysql_real_escape_string(_is_available_get_field_table($fbld_name));
+	$fbld_field = mysql_real_escape_string(_is_available_get_field_column($fbld_name));
 	$fbld_key = mysql_real_escape_string(array_search($fbld_name, $array_fbld));
 	$building_name = mysql_real_escape_string($buiding_name);
 		
 	$bldg_check_str .= "(" . $et_i_str . ".type = '" . 
-		mysql_real_escape_string($rt_object->get_machine_name()) . "' AND " .
+		mysql_real_escape_string($rt_object->_is_available_get_machine_name()) . "' AND " .
 		$fbld_key . "." . $fbld_field . " = '" . $building_name . "') OR ";
 }
 
-function build_fbld_frn_inner_join_str(&$fbld_frn_inner_join_str, $rt_object, 
+function _is_available_build_fbld_frn_inner_join_str(&$fbld_frn_inner_join_str, $rt_object, 
 	&$array_fbld_been_here, &$array_frn_been_here, $array_fbld_field, 
 	$array_frn_field, $et_i_str) {
 	
-	$field_building = $rt_object->get_field_building();
-	$field_rn = $rt_object->get_field_room_number();
+	$field_building = $rt_object->_is_available_get_field_building();
+	$field_rn = $rt_object->_is_available_get_field_room_number();
 	$fbld_key = array_search($field_building, $array_fbld_field);
 	$frn_key = array_search($field_rn, $array_frn_field);
 	
@@ -667,15 +668,15 @@ function build_fbld_frn_inner_join_str(&$fbld_frn_inner_join_str, $rt_object,
 	if (in_array($fbld_key, $array_fbld_been_here)) 
 		return;
 	
-	$bldg_table = $rt_object->get_building_table();
-	$bldg_field = $rt_object->get_building_field();
+	$bldg_table = $rt_object->_is_available_get_building_table();
+	$bldg_field = $rt_object->_is_available_get_building_field();
 	$fbld_frn_inner_join_str .= " INNER JOIN " . $bldg_table . " "  . $fbld_key . 
 		" ON " . $fbld_key . ".entity_id = " . $et_i_str . ".id ";
 	array_push($array_fbld_been_here, $fbld_key);
 	
 	if (in_array($frn_key, $array_frn_been_here)) return;
-	$rn_table = mysql_real_escape_string($rt_object->get_room_number_table());
-	$rn_field = $rt_object->get_room_number_field();
+	$rn_table = mysql_real_escape_string($rt_object->_is_available_get_room_number_table());
+	$rn_field = $rt_object->_is_available_get_room_number_field();
 	$frn_key = mysql_real_escape_string($frn_key);
 	$fbld_key = mysql_real_escape_string($fbld_key);
 	
@@ -684,7 +685,7 @@ function build_fbld_frn_inner_join_str(&$fbld_frn_inner_join_str, $rt_object,
 	array_push($array_frn_been_here, $frn_key);	
 }
 
-function build_select_str_and_not_in(&$select_str, &$not_in_str, 
+function _is_available_build_select_str_and_not_in(&$select_str, &$not_in_str, 
 	$temp_table_name, $temp_table_field, $array_fbld_field, 
 	$array_frn_field, $et_select_str, $all_resources, $all_buildings) {
 
@@ -693,29 +694,31 @@ function build_select_str_and_not_in(&$select_str, &$not_in_str,
 	// otherwise, if a specific building, no need to get the field building returned
 	if ($all_buildings) {
 		foreach ($array_fbld_field as $key => $value) {
-			$value = get_field_column($value);
+			$value = _is_available_get_field_column($value);
 			$select_str .= $key . "." . $value . ", ";
 		}
 	}
+	// dpm($array_frn_field);
 	foreach ($array_frn_field as $key => $value) {
-		$value = get_field_column($value);
+		$value = _is_available_get_field_column($value);
 		$select_str .= $key . "." . $value . ", ";
 		$not_in_str .= $key . ".entity_id = Temp." . $temp_table_field . " OR ";
 	}
+	// dpm($select_str);
 	
 	$not_in_str = substr($not_in_str, 0, -4) . ")"; // remove last " OR "
 	if (!$all_resources) 	$select_str = substr($select_str, 0, -2) . " "; // remove last ", "
 	else 							$select_str .= $et_select_str; 
 }
 
-function build_nested_temp_query(&$nested_query_temp_table, &$temp_table_field, 
+function _is_available_build_nested_temp_query(&$nested_query_temp_table, &$temp_table_field, 
 	$resource_types, $start_time, $end_time) {
 
 	foreach ($resource_types as $rt_machine_name => $rt_object) {
-		$entref_date_table = $rt_object->get_entref_date_table(); // array
+		$entref_date_table = $rt_object->_is_available_get_entref_date_table(); // array
 		if (!$entref_date_table || empty($entref_date_table)) {
 				drupal_set_message("Error: No entity reference or date table 
-					detected for " . $rt_object->get_title() . ".
+					detected for " . $rt_object->_is_available_get_title() . ".
 					Please check your settings.");
 				return;
 		}
@@ -724,13 +727,13 @@ function build_nested_temp_query(&$nested_query_temp_table, &$temp_table_field,
 		
 			if (!$entref) {
 				drupal_set_message("Error: No entity reference table detected for " . 
-					$rt_object->get_title() . ". Please check your settings.");
+					$rt_object->_is_available_get_title() . ". Please check your settings.");
 				return;
 			}
 			
 			if (!$date) {
 				drupal_set_message("Error: No date table detected for " . 
-					$rt_object->get_title() . ". Please check your settings.");
+					$rt_object->_is_available_get_title() . ". Please check your settings.");
 				return;
 			}
 
@@ -739,10 +742,10 @@ function build_nested_temp_query(&$nested_query_temp_table, &$temp_table_field,
 				$temp_table_field = $entref_target_id;
 		
 			$entref_field = mysql_real_escape_string("FER." . $entref_target_id);
-			$entref_table = mysql_real_escape_string(get_field_table($entref));
+			$entref_table = mysql_real_escape_string(_is_available_get_field_table($entref));
 			$date_field1 = mysql_real_escape_string("FDTE." . $date . "_value");
 			$date_field2 = mysql_real_escape_string($date_field1 . "2");
-			$date_table = mysql_real_escape_string(get_field_table($date));
+			$date_table = mysql_real_escape_string(_is_available_get_field_table($date));
 			
 			// Build the string
 			$nested_query_temp_table .= 
@@ -777,11 +780,11 @@ function build_nested_temp_query(&$nested_query_temp_table, &$temp_table_field,
  * 
  * @return $result Human-readable string result of the query.
  */
-function get_empty_resource_query_result($mysql_query, $building_name, $start_time, 
+function _is_available_get_empty_resource_query_result($mysql_query, $building_name, $start_time, 
 	$end_time, $resource_type, &$resource_types, &$buildings,  $all_types, $all_buildings, $get_result = 1) {
 
 	$type = $all_types ? 
-		"resource types" : $resource_types[$resource_type]->get_plural_name();
+		"resource types" : $resource_types[$resource_type]->_is_available_get_plural_name();
 	$header = 'Available ' . $type;
 	$resource_result = '';
 	$result = '';
@@ -792,38 +795,38 @@ function get_empty_resource_query_result($mysql_query, $building_name, $start_ti
 		$check_str = '. Please check your search terms.';
 		if ($get_result == 0) {
 			$error_str .= $type . $in . $building_name;
-		} else if ($get_result == -1) {
+		} elseif ($get_result == -1) {
 			$error_str .= $type;
-		} else { // if ($get_result == -2) 
+		} else { 
 			$error_str .= "searchable entity types";
 		}
 		return $error_str . $check_str;
 	}
 
-	$time_interval = get_time_interval_str($start_time, $end_time);
+	$time_interval = _is_available_get_time_interval_str($start_time, $end_time);
 	
 	// Execute the query
 	$query = db_query($mysql_query);
 
 	if ($all_buildings) {
 		 if ($all_types) {
-			$resource_result = get_all_buildings_all_types_result($query, $resource_types, $buildings);
+			$resource_result = _is_available_get_all_buildings_all_types_result($query, $resource_types, $buildings);
 		} else {  // !$all_types
-			$resource_result = get_all_buildings_not_all_types_result($query, $resource_types, $buildings, $resource_type);
+			$resource_result = _is_available_get_all_buildings_not_all_types_result($query, $resource_types, $buildings, $resource_type);
 		}
 	} else { // !$all_buildings (!$all_buildings && $all_types) 
 		$header .= $in . $building_name . ' ';
 		 if ($all_types) {
-			$resource_result = get_not_all_buildings_all_types_result($query, $resource_types, $buildings);
+			$resource_result = _is_available_get_not_all_buildings_all_types_result($query, $resource_types, $buildings);
 		} else {  // !$all_types
-			$resource_result = get_not_all_buildings_not_all_types_result($query, $resource_types, $buildings, $resource_type);
+			$resource_result = _is_available_get_not_all_buildings_not_all_types_result($query, $resource_types, $buildings, $resource_type);
 		}
 	}
 	if (trim($resource_result) == '' || trim($resource_result, '<br>') == '') { 	
 		if (!$all_buildings) {
 			$rt_object = $resource_types[$resource_type];
 			$rt_in_building_count = 
-				building_has_resource_type_query($building_name, 
+				_is_available_building_has_resource_type_query($building_name, 
 					$rt_object, $all_types, $resource_types, $resource_type);
 			if ($rt_in_building_count == 0) {
 				$result = "Sorry, there are no $type $in $building_name. 
@@ -851,27 +854,27 @@ function get_empty_resource_query_result($mysql_query, $building_name, $start_ti
  *
  * @return Human-readable result
  */
-function get_all_buildings_all_types_result($query, $resource_types, $buildings) {
+function _is_available_get_all_buildings_all_types_result($query, $resource_types, $buildings) {
 	$ender = 's: ';
 	
 	$temp_array = array();
 	reset($resource_types);
 	
-	//$temp_array maps string -> Pair<string, string> (see corresp. class in file)
-	// 	ResourceType->machine_name => Pair<resource_result_string, get_title()>
-	$temp_array = make_machine_name_string_title_pair($resource_types);
+	//$temp_array maps string -> IsAvailablePair<string, string> (see corresp. class in file)
+	// 	IsAvailableResourceType->machine_name => IsAvailablePair<resource_result_string, _is_available_get_title()>
+	$temp_array = _is_available_make_machine_name_string_title_pair($resource_types);
 	$resources_so_far = array();
 	foreach($query as $r) {
 		$rtype = $r->type;
 		$rt_object = $resource_types[$rtype];
-		$fbld_value = $rt_object->get_building_field();
-		$frn_value = $rt_object->get_room_number_field();
+		$fbld_value = $rt_object->_is_available_get_building_field();
+		$frn_value = $rt_object->_is_available_get_room_number_field();
 		$resource = $r->$fbld_value . $r->$frn_value;
-		append_all_resource_types_query_result($temp_array, $resource, $rtype, $ender, $resources_so_far);
+		_is_available_append_all_resource_types_query_result($temp_array, $resource, $rtype, $ender, $resources_so_far);
 	}
 	$resource_result = '';
 	foreach ($temp_array as $temp) {
-		$resource_result .= $temp->get_first();
+		$resource_result .= $temp->_is_available_get_first();
 	}
 	return $resource_result;
 } 
@@ -887,15 +890,15 @@ function get_all_buildings_all_types_result($query, $resource_types, $buildings)
  *
  * @return Human-readable result
  */
-function get_all_buildings_not_all_types_result($query, $resource_types, $buildings, $resource_type) {
+function _is_available_get_all_buildings_not_all_types_result($query, $resource_types, $buildings, $resource_type) {
 	$resource_result = '';
 	$resources_so_far = array();
 	$rt_object = $resource_types[$resource_type];
-	$fbld_value = $rt_object->get_building_field();
-	$frn_value = $rt_object->get_room_number_field();
+	$fbld_value = $rt_object->_is_available_get_building_field();
+	$frn_value = $rt_object->_is_available_get_room_number_field();
 	foreach($query as $r) {
 			$resource = $r->$fbld_value . $r->$frn_value;
-			append_not_all_resource_types_query_result($resource_result, $resource, $resources_so_far);
+			_is_available_append_not_all_resource_types_query_result($resource_result, $resource, $resources_so_far);
 		}
 	return $resource_result;
 }
@@ -911,7 +914,7 @@ function get_all_buildings_not_all_types_result($query, $resource_types, $buildi
  *
  * @return Human-readable result
  */
-function get_not_all_buildings_all_types_result($query, 
+function _is_available_get_not_all_buildings_all_types_result($query, 
 	$resource_types, $buildings) {
 	
 	$resource_result = '';
@@ -920,22 +923,22 @@ function get_not_all_buildings_all_types_result($query,
 	$temp_array = array();
 	reset($resource_types);
 
-	//$temp_array maps string -> Pair<string, string> (see corresp. class below)
-	// 	ResourceType->machine_name => Pair<resource_result_string, get_title()>
-	$temp_array = make_machine_name_string_title_pair($resource_types);
+	//$temp_array maps string -> IsAvailablePair<string, string> (see corresp. class below)
+	// 	IsAvailableResourceType->machine_name => IsAvailablePair<resource_result_string, _is_available_get_title()>
+	$temp_array = _is_available_make_machine_name_string_title_pair($resource_types);
 	$resources_so_far = array();	
 	foreach($query as $r) {
 		$rtype = $r->type;
 		$rt_object = $resource_types[$rtype];
-		$frn_value = $rt_object->get_room_number_field();
+		$frn_value = $rt_object->_is_available_get_room_number_field();
 		$resource = $r->$frn_value;
 		
-		append_all_resource_types_query_result($temp_array, $resource, 
+		_is_available_append_all_resource_types_query_result($temp_array, $resource, 
 			$rtype, $ender, $resources_so_far);
 	}
 	
 	foreach ($temp_array as $temp) {
-		$resource_result .= $temp->get_first();
+		$resource_result .= $temp->_is_available_get_first();
 	}
 	return $resource_result;
 } 
@@ -951,16 +954,16 @@ function get_not_all_buildings_all_types_result($query,
  *
  * @return Human-readable result
  */
-function get_not_all_buildings_not_all_types_result($query, 
+function _is_available_get_not_all_buildings_not_all_types_result($query, 
 	$resource_types, $buildings, $resource_type) {
 	
 	$resource_result = '';
 	$resources_so_far = array();
 	$rt_object = $resource_types[$resource_type];
-	$frn_value = $rt_object->get_room_number_field();
+	$frn_value = $rt_object->_is_available_get_room_number_field();
 	foreach($query as $r) {
 		$resource = $r->$frn_value;
-		append_not_all_resource_types_query_result($resource_result, 
+		_is_available_append_not_all_resource_types_query_result($resource_result, 
 			$resource, $resources_so_far);
 	}
 	return $resource_result;
@@ -983,12 +986,12 @@ function get_not_all_buildings_not_all_types_result($query,
  * @return 0 if no resources of this type exist in the building, >0 otherwise.
  */
 
-function building_has_resource_type_query($building_name, $rt_object, 
+function _is_available_building_has_resource_type_query($building_name, $rt_object, 
 	$all_types, $resource_types, $resource_type) {
 	
-	$fbld_field = mysql_real_escape_string($rt_object->get_building_field());
-	$fbld_table = mysql_real_escape_string($rt_object->get_building_table());
-	$rt_machine_name = mysql_real_escape_string($rt_object->get_machine_name());
+	$fbld_field = mysql_real_escape_string($rt_object->_is_available_get_building_field());
+	$fbld_table = mysql_real_escape_string($rt_object->_is_available_get_building_table());
+	$rt_machine_name = mysql_real_escape_string($rt_object->_is_available_get_machine_name());
 	$building_name = mysql_real_escape_string($building_name);
 	$count = 0;
 	
@@ -996,17 +999,17 @@ function building_has_resource_type_query($building_name, $rt_object,
 		"SELECT COUNT(entity_id) AS cnt 
 		FROM  $fbld_field WHERE $fbld_field = '$building_name'";
 	if (!$all_types) {
-		foreach ($resource_types[$resource_type]->get_buildings() as $b) {
-			if ($b->get_name() == $building_name && $b->get_auth_display() == 0)
+		foreach ($resource_types[$resource_type]->_is_available_get_buildings() as $b) {
+			if ($b->_is_available_get_name() == $building_name && $b->get_auth_display() == 0)
 				return 0;
 		}
 		$building_query .= " AND bundle = '" . $rt_machine_name . "'";
-	} else if ($all_types && !empty($resource_types)) {
+	} elseif ($all_types && !empty($resource_types)) {
 		$building_query .= " AND (";
 		foreach ($resource_types as $rt => $object) {
 			if ($object->get_auth_display() == 1)
 				$building_query .= "bundle = '" . 
-				mysql_real_escape_string($object->get_machine_name()) . "' OR ";
+				mysql_real_escape_string($object->_is_available_get_machine_name()) . "' OR ";
 		}
 		$building_query = substr($building_query, 0, -4) . ")"; // trim off last " OR ";
 	}
@@ -1018,10 +1021,9 @@ function building_has_resource_type_query($building_name, $rt_object,
 	return $count;
 }
 
-function get_time_interval_str($start_time, $end_time) {
+function _is_available_get_time_interval_str($start_time, $end_time) {
 	$str_sdate = strtotime($start_time);
 	$str_edate = strtotime($end_time);
-	dpm(date('h:i l, F jS', $str_edate));
 	$day_equals = (date('Y-m-d', $str_sdate) == date('Y-m-d', $str_edate));
 	$year_equals = (date('Y', $str_sdate) == date('Y', $str_edate)); 
 	$time_interval = "";
@@ -1053,7 +1055,7 @@ function get_time_interval_str($start_time, $end_time) {
  * @param $noworlater indicates x hours from now. Needed b/c time(some_date) returns the current time
  * @return The date rounded to the nearest 15 minutes.
  */
-function round_to_nearest_15_minutes($some_date, $noworlater, $date_format) {
+function _is_available_round_to_nearest_15_minutes($some_date, $noworlater, $date_format) {
 	$the_time = time($some_date) + $noworlater * 3600;
 	$rounded_numerator = 15 * 60;
 	$the_date = '';
@@ -1069,18 +1071,18 @@ function round_to_nearest_15_minutes($some_date, $noworlater, $date_format) {
 }
 
 /**
- * Constructs an associative array of ResourceType => Pair<string, string>, 
- * specifically ResourceType => Pair<'<br>', ResourceType->get_title()>
+ * Constructs an associative array of IsAvailableResourceType => IsAvailablePair<string, string>, 
+ * specifically IsAvailableResourceType => IsAvailablePair<'<br>', IsAvailableResourceType->_is_available_get_title()>
  *
  * @param $resource_types The array of resource types 
  * (see resource type initializer function)
  *
  * @return the aforementioned associative array.
  */
-function make_machine_name_string_title_pair($resource_types) {
+function _is_available_make_machine_name_string_title_pair($resource_types) {
 	$assoc_array = array();
 	foreach ($resource_types as $rt) { 
-		$assoc_array[$rt->get_machine_name()] = new Pair('', $rt->get_title());
+		$assoc_array[$rt->_is_available_get_machine_name()] = new IsAvailablePair('', $rt->_is_available_get_title());
 	}
 	return $assoc_array;
 }
@@ -1089,29 +1091,29 @@ function make_machine_name_string_title_pair($resource_types) {
  * assoc_array string string -> (void)
  * Adds the result from $resource to the existing result in the array
  * 
- * @param temp_array An associative array of ResourceType =>
- *   Pair<'resultsofar', ResourceType->get_title()>
+ * @param temp_array An associative array of IsAvailableResourceType =>
+ *   IsAvailablePair<'resultsofar', IsAvailableResourceType->_is_available_get_title()>
  * @param $resource The resource building/number 
  * @param $rtype The resource type as returned by the query (machine_name)
  * @param $ender The ender string for the result
  */
-function append_all_resource_types_query_result(&$temp_array, 
+function _is_available_append_all_resource_types_query_result(&$temp_array, 
 	$resource, $rtype, $ender, &$resources_so_far) {
  	
-	$current_result = $temp_array[$rtype]->get_first();
+	$current_result = $temp_array[$rtype]->_is_available_get_first();
 	if ($current_result == '') {
 		array_push($resources_so_far, $resource);
-		$temp_array[$rtype]->set_first(
-			'<br> ' . $temp_array[$rtype]->get_second() . $ender . $resource
+		$temp_array[$rtype]->_is_available_set_first(
+			'<br> ' . $temp_array[$rtype]->_is_available_get_second() . $ender . $resource
 		);
 	} else {
 		if (in_array($resource, $resources_so_far)) return;
 		array_push($resources_so_far, $resource);
-		$temp_array[$rtype]->set_first($current_result . ', ' . $resource);
+		$temp_array[$rtype]->_is_available_set_first($current_result . ', ' . $resource);
 	} 
 }
 
-function append_not_all_resource_types_query_result(&$resource_result, 
+function _is_available_append_not_all_resource_types_query_result(&$resource_result, 
 	$resource, &$resources_so_far) {
 	
 	if (strlen($resource_result) > 0)	{
@@ -1143,7 +1145,7 @@ define("RESOURCE_SEARCH", 'resource_search');
 function is_available_block_info() {
 	$blocks = array();
 	$blocks[RESOURCE_SEARCH] = array(
-		'info' => t('Check Resource Availability'),
+		'info' => t('Is Available -- Check Resource Availability'),
 		'cache' => DRUPAL_NO_CACHE,
 		'mb_enabled' => TRUE,
 	);
@@ -1166,8 +1168,8 @@ function is_available_block_configure($delta = '', $multi_id = NULL) {
 	}
 	
 	$form_object 			= new IsAvailableAdminSettingsForm;
-	$module_name 			= $form_object->get_module_name();
-	$setting_options 	= get_radios_setting_options($multi_id);
+	$module_name 			= $form_object->_is_available_get_module_name();
+	$setting_options 	= _is_available_get_radios_setting_options($multi_id);
 	$setting_key 		= $module_name . '_block_setting_' . $multi_id;
 	
 	$form[$setting_key] = array(
@@ -1195,7 +1197,7 @@ function is_available_block_save($delta = '', $edit = array()) {
 		return;
 	}
 	$form_object 		= new IsAvailableAdminSettingsForm;
-	$module_name 		= $form_object->get_module_name();
+	$module_name 		= $form_object->_is_available_get_module_name();
 	$multi_id				= $edit['multiblock_delta']['#value'];
 	$setting_key 		= $module_name . '_block_setting_' . $multi_id;
 	$setting_title	= strtr($setting_key, array('setting' => 'title'));
@@ -1217,11 +1219,11 @@ function is_available_block_view($delta = '', $multi_id = NULL) {
 	}
 	
 	$form_object 	= new IsAvailableAdminSettingsForm;
-	$module_name 	= $form_object->get_module_name();
+	$module_name 	= $form_object->_is_available_get_module_name();
 	$title				= $module_name . '_block_setting_' . $multi_id;
 	$setting_id 	= variable_get($title, '');
-	$array_et 		= block_view_get_entity_types($setting_id, $form_object);
-	block_view_get_resource_types($array_et, $setting_id, $form_object);
+	$array_et 		= _is_available_block_view_get_entity_types($setting_id, $form_object);
+	_is_available_block_view_get_resource_types($array_et, $setting_id, $form_object);
 	
 	$block = array(
 		'subject' => t('Search for vacancy'),
@@ -1232,13 +1234,15 @@ function is_available_block_view($delta = '', $multi_id = NULL) {
 	return $block;
 }
 
-function get_radios_setting_options($multi_id) {
+// HERE BE DRAGONS
+
+function _is_available_get_radios_setting_options($multi_id) {
 	$form_object = new IsAvailableAdminSettingsForm;
-	$module_name = $form_object->get_module_name();
+	$module_name = $form_object->_is_available_get_module_name();
 	$leading_str = mysql_real_escape_string($module_name . '_settings_title_');
 	$leading_str_strlen = strlen($leading_str);
-	$alpha			 = $form_object->get_alphabet();
-	$i		 			 = $form_object->get_settings_count();
+	$alpha			 = $form_object->_is_available_get_alphabet();
+	$i		 			 = $form_object->_is_available_get_settings_count();
 	$ret_array	 = array();
 
 	$query1 = 
@@ -1276,7 +1280,7 @@ function get_radios_setting_options($multi_id) {
 	* @param $array_rt Array of resource types
 	* @param $array_buildings Array of buildings to search over
 	*/
-function initialize_resource_types_and_buildings_and_options($array_et, 
+function _is_available_initialize_resource_types_and_buildings_and_options($array_et, 
 	&$array_rt,	&$array_rt_options, &$array_buildings, &$array_building_options, 
 	&$array_fbld_field, &$array_frn_field, $all) {
 	
@@ -1293,16 +1297,16 @@ function initialize_resource_types_and_buildings_and_options($array_et,
 	$rt_i = 0;
 	$bldg_j = 0;
 	foreach ($array_et as $et_machine_name => $et_object) {
-		foreach ($et_object->get_resource_types() 
+		foreach ($et_object->_is_available_get_resource_types() 
 			as $rt_machine_name => $rt_object) {
 			
-			$rt_mn = $rt_object->get_machine_name();
-			$fbld = $rt_object->get_field_building();
-			$frn = $rt_object->get_field_room_number();
+			$rt_mn = $rt_object->_is_available_get_machine_name();
+			$fbld = $rt_object->_is_available_get_field_building();
+			$frn = $rt_object->_is_available_get_field_room_number();
 			
 			if (!array_key_exists($rt_mn, $array_rt)) {
 				$array_rt[$rt_mn] = $rt_object;
-				$array_rt_options[$rt_object->get_str_id()] = $rt_object->get_title();
+				$array_rt_options[$rt_object->_is_available_get_str_id()] = $rt_object->_is_available_get_title();
 				
 				if (!in_array($fbld, $array_fbld_field)) 
 					$array_fbld_field["FBLD" . $bldg_j++] = $fbld;
@@ -1310,15 +1314,14 @@ function initialize_resource_types_and_buildings_and_options($array_et,
 				if (!in_array($frn, $array_frn_field))	
 					$array_frn_field["FRN" . $rt_i++] = $frn;
 				
-				foreach ($rt_object->get_buildings() as $bldg_name => $bldg_object) {
-					$bldg_str_id = $bldg_object->get_str_id();
+				foreach ($rt_object->_is_available_get_buildings() as $bldg_name => $bldg_object) {
+					$bldg_str_id = $bldg_object->_is_available_get_str_id();
 				
 				if (!array_key_exists($bldg_str_id, $array_buildings)) {
 						$array_buildings[$bldg_str_id] = $bldg_object;
-						$array_building_options[$bldg_str_id] = $bldg_object->get_name();
+						$array_building_options[$bldg_str_id] = $bldg_object->_is_available_get_name();
 					}
 				}
-
 			}
 		}
 	}
@@ -1331,25 +1334,25 @@ function initialize_resource_types_and_buildings_and_options($array_et,
  * BLOCK SETTINGS FORM
  * =====================================================
  */
-function block_view_get_entity_types($setting_id, $form_object) {
+function _is_available_block_view_get_entity_types($setting_id, $form_object) {
 	// e.g. is_available_entity_type_a_space
-	$module_name			= $form_object->get_module_name();
-	$key_entity_type	= $form_object->get_key_entity_type();
+	$module_name			= $form_object->_is_available_get_module_name();
+	$key_entity_type	= $form_object->_is_available_get_key_entity_type();
 	$key_entity_type 	= 
 		$module_name . '_' . $key_entity_type . '_' . $setting_id . '_';
 	$leading_strlen		= strlen($key_entity_type);
 	$ret_array 				= array();
 	
-	$query1 = block_view_helper_get_varname_like_query($key_entity_type);
+	$query1 = _is_available_block_view_helper_get_varname_like_query($key_entity_type);
 	if (!empty($query1)) {
 		foreach ($query1 as $q1) {
 			// construct entitytype objects out of all the auth'd entity types
 			if (variable_get($q1->name, 0) == 1) {
 				$et_machine_name = substr($q1->name, $leading_strlen);
 				$et_label = 
-					block_view_helper_get_label('eck_entity_type', $et_machine_name);
+					_is_available_block_view_helper_get_label('eck_entity_type', $et_machine_name);
 				$ret_array[$et_machine_name] = 
-					new EntityTaipe($et_machine_name, $et_label);
+					new IsAvailableEntityTaipe($et_machine_name, $et_label);
 			}
 		}
 	}
@@ -1357,13 +1360,13 @@ function block_view_get_entity_types($setting_id, $form_object) {
 }
 
 /**
- * (arrayof string => EntityTaipe) -> (void)
+ * (arrayof string => IsAvailableEntityTaipe) -> (void)
  */
-function block_view_get_resource_types(&$array_et_objects, 
+function _is_available_block_view_get_resource_types(&$array_et_objects, 
 	$setting_id, $form_object) {
 	// is_available_resource_type_a_space_meeting_resource
-	$module_name		= $form_object->get_module_name();
-	$key_resource_type	= $form_object->get_key_resource_type();
+	$module_name		= $form_object->_is_available_get_module_name();
+	$key_resource_type	= $form_object->_is_available_get_key_resource_type();
 	$key_resource_type 	= 
 		$module_name . '_' . $key_resource_type . '_' . $setting_id . '_';
 	
@@ -1377,42 +1380,42 @@ function block_view_get_resource_types(&$array_et_objects,
 		$array_resource_types = array();
 		$key_rt = $key_resource_type . $et_machine_name . '_';
 		$leading_strlen = strlen($key_rt);
-		$query1 = block_view_helper_get_varname_like_query($key_rt);
+		$query1 = _is_available_block_view_helper_get_varname_like_query($key_rt);
 		if (!empty($query1)) {
 			foreach ($query1 as $q1) {
 				if (variable_get($q1->name, 0) == 1) {
 					$rt_machine_name = substr($q1->name, $leading_strlen);
 					$rt_label = 
-						block_view_helper_get_label('eck_bundle', $rt_machine_name);
+						_is_available_block_view_helper_get_label('eck_bundle', $rt_machine_name);
 					$resource_type = 
-						new ResourceType($rt_machine_name, array(), $rt_label); 
-					configure_resource_type($resource_type, $et_machine_name, 
+						new IsAvailableResourceType($rt_machine_name, array(), $rt_label); 
+					_is_available_configure_resource_type($resource_type, $et_machine_name, 
 						$setting_id, $form_object);
 					$array_resource_types[$rt_machine_name] = $resource_type;
 				}
 			}
-			$et_object->set_resource_types($array_resource_types);
+			$et_object->_is_available_set_resource_types($array_resource_types);
 		}
 	}
 }
 
-function configure_resource_type(&$rt_object, $et_machine_name, 
+function _is_available_configure_resource_type(&$rt_object, $et_machine_name, 
 	$setting_id, $form_object) {
 	
-	block_view_get_rt_brn_table($rt_object, $et_machine_name, 
+	_is_available_block_view_get_rt_brn_table($rt_object, $et_machine_name, 
 		$setting_id, $form_object);
-	block_view_get_auth_buildings($rt_object, $et_machine_name, 
+	_is_available_block_view_get_auth_buildings($rt_object, $et_machine_name, 
 		$setting_id, $form_object);
-	block_view_get_entref_date_tables($rt_object, $et_machine_name, 
+	_is_available_block_view_get_entref_date_tables($rt_object, $et_machine_name, 
 		$setting_id, $form_object);
 }
 
-function block_view_get_rt_brn_table(&$rt_object, $et_machine_name, $setting_id, $form_object) {
+function _is_available_block_view_get_rt_brn_table(&$rt_object, $et_machine_name, $setting_id, $form_object) {
 	// is_available_building_table_a_space_meeting_resource
-	$module_name		= $form_object->get_module_name();
-	$et_rt 					= $et_machine_name . '_' . $rt_object->get_machine_name();
-	$key_building 	= $form_object->get_key_building_table();
-	$key_rn					= $form_object->get_key_resource_number_table();
+	$module_name		= $form_object->_is_available_get_module_name();
+	$et_rt 					= $et_machine_name . '_' . $rt_object->_is_available_get_machine_name();
+	$key_building 	= $form_object->_is_available_get_key_building_table();
+	$key_rn					= $form_object->_is_available_get_key_resource_number_table();
 	
 	$building_term 	= $module_name . '_' . $key_building . '_' . $setting_id .	'_' . $et_rt;
 	$rn_term				= $module_name . '_' . $key_rn . '_' . $setting_id . 	'_' . $et_rt;
@@ -1420,19 +1423,19 @@ function block_view_get_rt_brn_table(&$rt_object, $et_machine_name, $setting_id,
 	$building_field	= variable_get($building_term, '');
 	$rn_field				= variable_get($rn_term, '');
 	
-	$rt_object->set_field_building($building_field);
-	$rt_object->set_field_room_number($rn_field);
+	$rt_object->_is_available_set_field_building($building_field);
+	$rt_object->_is_available_set_field_room_number($rn_field);
 }
 
-function block_view_get_auth_buildings(&$rt_object, $et_machine_name, $setting_id, $form_object) {
+function _is_available_block_view_get_auth_buildings(&$rt_object, $et_machine_name, $setting_id, $form_object) {
 	// is_available_auth_building_a_space_mr_FSC
 	$ret_array					= array(); // an array of building objects
-	$module_name				= $form_object->get_module_name();
-	$et_rt 							= $et_machine_name . '_' . $rt_object->get_machine_name();
-	$key_auth_building 	= $form_object->get_key_auth_buildings();
+	$module_name				= $form_object->_is_available_get_module_name();
+	$et_rt 							= $et_machine_name . '_' . $rt_object->_is_available_get_machine_name();
+	$key_auth_building 	= $form_object->_is_available_get_key_auth_buildings();
 	$key_auth_building	= $module_name . '_' . $key_auth_building . '_' . $setting_id . '_' . $et_rt . '_';
 	$leading_strlen			= strlen($key_auth_building);
-	$query = block_view_helper_get_varname_like_query($key_auth_building);
+	$query = _is_available_block_view_helper_get_varname_like_query($key_auth_building);
 	
 		if (empty($query)) {
 			drupal_set_message('Error: No selected buildings detected. 
@@ -1443,26 +1446,27 @@ function block_view_get_auth_buildings(&$rt_object, $et_machine_name, $setting_i
 	foreach ($query as $q) {
 		if (variable_get($q->name, 0) == 1) {
 			$bldg_name = substr($q->name, $leading_strlen);
-			$ret_array[$bldg_name] = new Building($bldg_name);
+			$ret_array[$bldg_name] = new IsAvailableBuilding($bldg_name);
 		}
 	}
-	
-	$rt_object->set_buildings($ret_array);
+	$rt_object->_is_available_set_buildings($ret_array);
 }
 
-function block_view_get_entref_date_tables(&$rt_object, $et_machine_name, $setting_id, $form_object) {
+
+
+function _is_available_block_view_get_entref_date_tables(&$rt_object, $et_machine_name, $setting_id, $form_object) {
 	// is_available_entref_space_meeting_resource_event_a
 	// is_available_date_space_meeting_resource_a_event
-	$module_name 	= $form_object->get_module_name();
-	$key_entref		= $form_object->get_key_entref();
+	$module_name 	= $form_object->_is_available_get_module_name();
+	$key_entref		= $form_object->_is_available_get_key_entref();
 	$key_date			= 'date';
-	$et_rt				= $et_machine_name . '_' . $rt_object->get_machine_name();
+	$et_rt				= $et_machine_name . '_' . $rt_object->_is_available_get_machine_name();
 	$key_entref 	= $module_name . '_' . $key_entref . '_' . $et_rt . '_';
 	$key_date			= $module_name . '_' . $key_date . '_' . $et_rt . '_' . $setting_id . '_';
 	$array_entref_date = array();
 
-	block_view_get_content_types($rt_object, $et_machine_name, $setting_id, $form_object);
-	$content_types = $rt_object->get_content_types();
+	_is_available_block_view_get_content_types($rt_object, $et_machine_name, $setting_id, $form_object);
+	$content_types = $rt_object->_is_available_get_content_types();
 
 	if (empty($content_types)) return;
 	
@@ -1480,27 +1484,27 @@ function block_view_get_entref_date_tables(&$rt_object, $et_machine_name, $setti
 		return;
 	}
 	
-	$rt_object->set_entref_date_tables($array_entref_date);
+	$rt_object->_is_available_set_entref_date_tables($array_entref_date);
 }
 		
 	
 
-function block_view_get_content_types(&$rt_object, $et_machine_name, 
+function _is_available_block_view_get_content_types(&$rt_object, $et_machine_name, 
 	$setting_id, $form_object) {
 	
 	// is_available_content_type_space_meeting_resource_a_event
-	$module_name 			= $form_object->get_module_name();
-	$key_content_type	= $form_object->get_key_content_type();
-	$et_rt						= $et_machine_name . '_' . $rt_object->get_machine_name();
+	$module_name 			= $form_object->_is_available_get_module_name();
+	$key_content_type	= $form_object->_is_available_get_key_content_type();
+	$et_rt						= $et_machine_name . '_' . $rt_object->_is_available_get_machine_name();
 	$key_content_type	= $module_name . '_' . $key_content_type . '_' . $et_rt . '_' . $setting_id . '_';
 	$leading_strlen		= strlen($key_content_type);
 	$array_ct					= array();
-	$query 						= block_view_helper_get_varname_like_query($key_content_type);
+	$query 						= _is_available_block_view_helper_get_varname_like_query($key_content_type);
 	
 	if (empty($query)) {
 		drupal_set_message('Error: No selected content types detected for ' . 
-			convert_to_readable_name($et_machine_name) . ': ' .
-			$rt_object->get_title() . '. Please check your settings.', 'error');
+			_is_available_convert_to_readable_name($et_machine_name) . ': ' .
+			$rt_object->_is_available_get_title() . '. Please check your settings.', 'error');
 		return array();
 	}
 	
@@ -1515,10 +1519,10 @@ function block_view_get_content_types(&$rt_object, $et_machine_name,
 		drupal_set_message("Error: No selected content types detected.", 'error');
 		return;
 	}
-	$rt_object->set_content_types($array_ct);
+	$rt_object->_is_available_set_content_types($array_ct);
 }
 
-function block_view_helper_get_varname_like_query($term) {
+function _is_available_block_view_helper_get_varname_like_query($term) {
 	$term .= '%';
 	$term = mysql_real_escape_string($term);
 
@@ -1529,7 +1533,7 @@ function block_view_helper_get_varname_like_query($term) {
 /**
  * string string -> string
  */
-function block_view_helper_get_label($table, $machine_name) {
+function _is_available_block_view_helper_get_label($table, $machine_name) {
 	$ret_str = '';
 	$table = mysql_real_escape_string($table);
 	$machine_name = mysql_real_escape_string($machine_name);
@@ -1540,18 +1544,12 @@ function block_view_helper_get_label($table, $machine_name) {
 	return $ret_str;
 }
 
-function get_mysql_24h_date($ampm_date) {
-	// Y-m-d h:ia format
-	$str_splode = explode(" ", $ampm_date);
-	$time = explode(":", $str_splode[1]);
-	$hr = $time[0];
-	switch ($hr) {
-		case 12:
-			if ($time[1] == 'am') $hr = 00;
-			break;
-		default:
-			if ($time[1] == 'pm') $hr += 12;
-			break;
-	}
-	return $str_splode[0] . " " . $hr . ":" . substr($time[1], 0, 2);
-}
+/*        
+	 $Z++I7$Z..............................$$..         
+	 $$....IZ$.:=I$,?$..=?+.:7Z$$,..+7Z$7..$$..         
+	 $$.   =$$.$$:..$$..$$+,Z$..$$7....~$Z.$$..         
+	 $$.   =$$.$$,..$$..$$+:$Z..I7$:$$$$$$.$$..         
+	 $7,..,$Z?.$$,..$$..$$=:7$..7$IZ$=.:$$.$$..         
+	 $ZZZ$$?...$Z,..,Z$7Z7.:$$$$Z~..$$$Z$:..ZZ$         
+*/
+
