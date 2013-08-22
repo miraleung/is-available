@@ -70,7 +70,6 @@ function is_available_form() {
  * @param $resource_types The resource type array initialized by initialize_resource_type.
  */
 function is_available_resource_search_form($form, $form_state, $array_et = array(), $multi_id = NULL) {
-	
 	if (empty($array_et)) {
 		drupal_set_message("Error: No searchable entity types detected. Please check your settings.", 'error');
 		return;
@@ -1189,7 +1188,6 @@ function is_available_block_configure($delta = '', $multi_id = NULL) {
  * Patch at https://drupal.org/files/fix_config_per_instance-1370966-5.patch
  */
 function is_available_block_save($delta = '', $edit = array()) {
-
 	if ($delta != RESOURCE_SEARCH && $delta != 'room_search') {
 		drupal_set_message("Your resource settings were not saved -- your block 
 			delta is " . $delta . ", and it may have changed -- 
