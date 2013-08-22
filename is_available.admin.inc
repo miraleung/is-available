@@ -1050,7 +1050,8 @@ function is_available_form_delete_setting_rebuild(&$form, $form_state) {
 	
 	global $conf;
 	
-	$current_title = $form_object->get_settings_options()[$nth_setting];
+	$settings_options = $form_object->get_settings_options();
+	$current_title = $settings_options[$nth_setting];
 	$sid = get_setting_multi_id_to_delete($current_title, $module_name);
 	if (!is_string($sid)) return; // no setting to delete
 	
