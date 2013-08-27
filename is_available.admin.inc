@@ -44,8 +44,9 @@ function is_available_settings($form, &$form_state, $module_name = 'is_available
 	$array_entity_types = _is_available_get_checkboxes_value($form_state, 'entity_type');
 	
 	// array_form_stage_n_elements -- the number of form elements at a given stage
-	$array_fsne = /* !empty($form_state['values']) ? array() : */
-		_is_available_get_form_stage_n_element_array($form_state['values'], $nth_setting);
+	$fsne_arg = empty($form_state['values']) ? array() : $form_state['values'];
+	$array_fsne = 
+		_is_available_get_form_stage_n_element_array($fsne_arg, $nth_setting);
 	
 	$checked_entity_types = 
 		_is_available_get_checked_only($form_state, 'entity_type', $nth_setting);

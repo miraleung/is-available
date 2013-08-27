@@ -15,7 +15,6 @@ error_reporting(E_ALL);
 ini_set('display_errors', TRUE);
 ini_set('display_startup_errors', TRUE);
 
-
 /**
  * Implements hook_menu().
  */
@@ -409,7 +408,7 @@ function _is_available_execute_query($building_name, $start_time, $end_time,
 	}
 	
 	// 1: get the result; -2, -1, 0: don't bother
-	// -2: No eneity types or empty sql query
+	// -2: No entity types or empty sql query
 	// -1: All buildings with specific resource type; no such resource type
 	// 0 : specific building & specific resource type;; no such resource in that building 
 	$result = 
@@ -837,7 +836,7 @@ function _is_available_get_empty_resource_query_result($mysql_query, $building_n
 		$result .= $all_buildings ? '' : $in .  $building_name;
 		$result .= $time_interval;
 	}	else {
-		$result = $header . $time_interval . ': <br>' . $resource_result;
+		$result = $header . ":" . $resource_result; /*$time_interval . ': <br>' .*/ 
 	}
 	return $result;
 } 
