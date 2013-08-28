@@ -86,14 +86,14 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	_is_available_initialize_resource_types_and_buildings_and_options($array_et, $resource_types, $resource_type_options, $buildings, $all_building_options, $array_fbld_field, $array_frn_field, $all);
 	
 	// if it has only the - All - option, return
-	if (sizeof($resource_type_options) <= 1 || empty($resource_types)) { 
+	if (sizeof($resource_type_options) < 1 || empty($resource_types)) { 
 		drupal_set_message("Error: No searchable resource types detected. 
 			Please check your settings.", 'error');
 		return;
 	}
 	
 	// if it has only the - All - option, return
-	if (sizeof($all_building_options) <= 1 || empty($buildings)) { 
+	if (sizeof($all_building_options) < 1 || empty($buildings)) { 
 		drupal_set_message("Error: No searchable buildings detected. 
 			Please check your settings.", 'error');
 		return;
@@ -112,7 +112,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	$current_time_plus_hour = date($date_format, time() + 3600);
 	$current_time_plus_hour_rounded = 
 		_is_available_round_to_nearest_15_minutes($current_time_plus_hour, 1, $date_format); 
-	// // dpm($current_time);
+	// // // dpm($current_time);
 	// Set the calendar
 	if (!isset($form_state['values']['cal_popup_start']))
 		$form_state['values']['cal_popup_start'] = $current_time_rounded;
@@ -567,7 +567,7 @@ function _is_available_get_empty_resource_query_object($building_name, $start_ti
 	
 	$mysql_query = 
 		$select_str . $inner_join_where_str . $bldg_check_str . $not_in_str;
-	// dpm("FROM QUERY_OBJ"); // dpm($mysql_query);
+	// dpm("FROM QUERY_OBJ");  // dpm($mysql_query);
 	$query_object = 
 		new IsAvailableEmptyResourceQuery($delete_temp_table, $nested_query_temp_table, 
 		$mysql_query);
@@ -696,13 +696,13 @@ function _is_available_build_select_str_and_not_in(&$select_str, &$not_in_str,
 			$select_str .= $key . "." . $value . ", ";
 		}
 	}
-	// // dpm($array_frn_field);
+	// // // dpm($array_frn_field);
 	foreach ($array_frn_field as $key => $value) {
 		$value = _is_available_get_field_column($value);
 		$select_str .= $key . "." . $value . ", ";
 		$not_in_str .= $key . ".entity_id = Temp." . $temp_table_field . " OR ";
 	}
-	// // dpm($select_str);
+	// // // dpm($select_str);
 	
 	$not_in_str = substr($not_in_str, 0, -4) . ")"; // remove last " OR "
 	if (!$all_resources) 	$select_str = substr($select_str, 0, -2) . " "; // remove last ", "
@@ -807,7 +807,7 @@ function _is_available_get_empty_resource_query_result($mysql_query, $building_n
 	$aprefix = '<div class="is-available-result-header">';
 	$time_interval = $tprefix . $time_interval;
 	
-	// dpm("get_query: $mysql_query");
+	// // dpm("get_query: $mysql_query");
 	// Execute the query
 	$query = db_query($mysql_query);
 
@@ -818,11 +818,11 @@ function _is_available_get_empty_resource_query_result($mysql_query, $building_n
 			$resource_result = _is_available_get_all_buildings_not_all_types_result($query, $resource_types, $buildings, $resource_type, $array_et);
 		}
 	} else { // !$all_buildings (!$all_buildings && $all_types) 
-		$header .= $in . $building_name . ': ';
+		$header .= $in . $building_name . ' ';
 		 if ($all_types) {
-			$resource_result = _is_available_get_not_all_buildings_all_types_result($query, $resource_types, $buildings, $array_et);
+			$resource_result = _is_available_get_not_all_buildings_all_types_result($query, $resource_types, $buildings, $array_et, $building_name);
 		} else {  // !$all_types
-			$resource_result = _is_available_get_not_all_buildings_not_all_types_result($query, $resource_types, $buildings, $resource_type, $array_et);
+			$resource_result = _is_available_get_not_all_buildings_not_all_types_result($query, $resource_types, $buildings, $resource_type, $array_et, $building_name);
 		}
 	}
 	if (trim($resource_result) == '' || trim($resource_result, '<br>') == '') { 	
@@ -883,7 +883,7 @@ function _is_available_get_all_buildings_all_types_result($query, $resource_type
 	foreach ($temp_array as $temp) {
 		$resource_result .= $temp->_is_available_get_first();
 	}
-	// dpm($resource_result);
+	// // dpm($resource_result);
 	return $resource_result;
 } 
 
@@ -906,7 +906,8 @@ function _is_available_get_all_buildings_not_all_types_result($query, $resource_
 	$frn_value = $rt_object->_is_available_get_room_number_field();
 	foreach($query as $r) {
 			$resource = $r->$fbld_value . " " . $r->$frn_value;
-			_is_available_append_not_all_resource_types_query_result($resource_result, $resource, $resources_so_far, $array_et);
+			_is_available_append_not_all_resource_types_query_result($resource_result,
+			  $resource_type, $resource, $resources_so_far, $array_et);
 		}
 	return $resource_result;
 }
@@ -923,7 +924,7 @@ function _is_available_get_all_buildings_not_all_types_result($query, $resource_
  * @return Human-readable result
  */
 function _is_available_get_not_all_buildings_all_types_result($query, 
-	$resource_types, $buildings) {
+	$resource_types, $buildings, $array_et, $building_name) {
 	
 	$resource_result = '';
 	$ender = 's: ';
@@ -939,7 +940,7 @@ function _is_available_get_not_all_buildings_all_types_result($query,
 		$rtype = $r->type;
 		$rt_object = $resource_types[$rtype];
 		$frn_value = $rt_object->_is_available_get_room_number_field();
-		$resource = $r->$frn_value;
+		$resource = $building_name . " " . $r->$frn_value;
 		
 		_is_available_append_all_resource_types_query_result($temp_array, $resource, 
 			$rtype, $ender, $resources_so_far, $array_et);
@@ -963,16 +964,16 @@ function _is_available_get_not_all_buildings_all_types_result($query,
  * @return Human-readable result
  */
 function _is_available_get_not_all_buildings_not_all_types_result($query, 
-	$resource_types, $buildings, $resource_type) {
+	$resource_types, $buildings, $resource_type, $array_et, $building_name) {
 	
 	$resource_result = '';
 	$resources_so_far = array();
 	$rt_object = $resource_types[$resource_type];
 	$frn_value = $rt_object->_is_available_get_room_number_field();
 	foreach($query as $r) {
-		$resource = $r->$frn_value;
+		$resource = $building_name . " " . $r->$frn_value;
 		_is_available_append_not_all_resource_types_query_result($resource_result, 
-			$resource, $resources_so_far, $array_et);
+			$resource_type, $resource, $resources_so_far, $array_et);
 	}
 	return $resource_result;
 }
@@ -1107,26 +1108,62 @@ function _is_available_make_machine_name_string_title_pair($resource_types) {
  */
 function _is_available_append_all_resource_types_query_result(&$temp_array, 
 	$resource, $rtype, $ender, &$resources_so_far, $array_et) {
- 	
 	$current_result = $temp_array[$rtype]->_is_available_get_first();
+	$rnum = explode(" ", $resource);
+	$rnum = $rnum[1];
 	if ($current_result == '') {
 		array_push($resources_so_far, $resource);
-		$rnum = explode(" ", $resource);
-		$rnum = $rnum[1];
 		_is_available_room_link_markup($rnum, $rtype, $resource, $array_et);
+		$resource_type = $temp_array[$rtype]->_is_available_get_second();
+		$markup_resource_type = '<label for="' . $rtype . '">';
+		$markup_resource_type .= $resource_type . $ender. '</label>';
+		$markup_resource_type .= '<ul id="' . $resource_type . '">';
 		$temp_array[$rtype]->_is_available_set_first(
-			'<br> ' . $temp_array[$rtype]->_is_available_get_second() . $ender . $resource
-		);
-		// dpm("IF " . $resource);
+			'<br> ' . $markup_resource_type . $resource . '</ul>');
+		// // dpm("IF " . $resource);
 	} else {
 		if (in_array($resource, $resources_so_far)) return;
-		array_push($resources_so_far, $resource);
-		$temp_array[$rtype]->_is_available_set_first($current_result . ', ' . $resource);
-		// dpm("ELSE " . $resource);
+		$current_result = substr($current_result, -5);
+		array_push($resources_so_far, $resource); //$r->$rbld_value . " " .
+		_is_available_room_link_markup($rnum, $rtype, $resource, $array_et);
+		$result_so_far = $temp_array[$rtype]->_is_available_get_first();
+		$temp_array[$rtype]->_is_available_set_first($current_result . $resource . '</ul>');
+		// // dpm("ELSE " . $resource);
 	} 
+	
 }
 
 function _is_available_room_link_markup($rnum, $rtype, &$resource, $array_et) {
+   $eid = _is_available_get_room_entity_id($rnum, $rtype, $array_et);
+   $entity = reset(entity_load('node', array($eid)));
+   if ($entity != NULL) {
+     $euri = entity_uri('node', $entity);
+     $entity_path = url($euri['path'], $euri['options']);
+  // dpm(entity_uri('node', reset(entity_load('node', array($nodeid)))));
+     global $base_url;
+     $resource = l($resource, $base_url . $entity_path, $euri['options']);
+    }
+     $resource = '<li>' . $resource . '</li>';
+}
+
+function _is_available_append_not_all_resource_types_query_result(&$resource_result, 
+  $rtype, $resource, &$resources_so_far, $array_et) {
+	
+	$rnum = explode(" ", $resource);
+	$rnum = $rnum[1];
+	if (strlen($resource_result) > 0)	{
+		if (in_array($resource, $resources_so_far)) return;
+		array_push($resources_so_far, $resource);
+		_is_available_room_link_markup($rnum, $rtype, $resource, $array_et);
+		$resource_result .=  ', ' . $resource;
+		return;
+	}
+	
+	array_push($resources_so_far, $resource);
+	$resource_result .= $resource;
+}
+
+function _is_available_get_room_entity_id($rnum, $rtype, $array_et) {
   $frn = ""; $frnf = "";
   foreach ($array_et as $et_obj) {
     foreach ($et_obj->_is_available_get_resource_types() as $key => $rt_obj) {
@@ -1141,25 +1178,11 @@ function _is_available_room_link_markup($rnum, $rtype, &$resource, $array_et) {
    $frn = mysql_real_escape_string($frn);
    $frnf = mysql_real_escape_string($frnf);
    $query = db_query("SELECT entity_id FROM $frn WHERE $frnf = '$rnum'");
-   $nodeid = "";
+   $eid = "";
    foreach ($query as $q) {
-    $nodeid = $q->entity_id;
+    $eid = $q->entity_id;
    }
-   // dpm(node_load($nodeid));
-}
-
-function _is_available_append_not_all_resource_types_query_result(&$resource_result, 
-	$resource, &$resources_so_far, $array_et) {
-	
-	if (strlen($resource_result) > 0)	{
-		if (in_array($resource, $resources_so_far)) return;
-		array_push($resources_so_far, $resource);
-		$resource_result .=  ', ' . $resource;
-		return;
-	}
-	
-	array_push($resources_so_far, $resource);
-	$resource_result .= $resource;
+   return $eid;
 }
 
 /**
@@ -1359,6 +1382,9 @@ function _is_available_initialize_resource_types_and_buildings_and_options($arra
 			}
 		}
 	}
+	// dpm(sizeof($array_rt_options));
+	// dpm($array_rt_options);
+	if (sizeof($array_rt_options) <= 2) unset($array_rt_options[$all]);
 }
 
 
