@@ -428,10 +428,10 @@ class IsAvailableAdminSettingsForm {
 		$alphabet = $this->ALPHABET;
 		$count = substr($alphabet, $j-1, 1);
 		if ($j == 0) {
-			$name = variable_get($this->_is_available_get_module_name() . '_settings_title_a', "");
+			$name = variable_get($this->_is_available_get_module_name() . '_settings_title_1', "");
 			if ($name == "") {
 				$name = 'Setting 1 (unconfigured)';
-				variable_set($this->_is_available_get_module_name() . '_settings_title_a', $name);
+				variable_set($this->_is_available_get_module_name() . '_settings_title_1', $name);
 			}
 			$array_return = array('a' => $name);
 		} else {
