@@ -8,7 +8,6 @@ configure = admin/config/content/is_available
 
 dependencies[] = date
 dependencies[] = eck
-dependencies[] = devel
 dependencies[] = multiblock
 
 stylesheets[all][] = css/is_available.css

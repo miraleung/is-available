@@ -139,7 +139,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 			$value_start_time, $value_end_time,  
 			$value_resource_type, $array_et, $resource_types, 
 			$array_fbld_field, $array_frn_field, $all,
-			$date_format); 
+			$date_format, $multi_id); 
 		
 	// Markup the form
 	$form['#prefix'] = '<div class="search-form-' . $multi_id. '">';
@@ -329,9 +329,8 @@ function is_available_resource_search_form_clear($form, $form_state) {
  *
  * @return $result The available resources as a string, with added context.
  */
-function is_available_available_resources($building_id, $building_options, $start_time, $end_time, 
-	$resource_type = '- All -', $array_et, $resource_types, $array_fbld_field, 
-	$array_frn_field, $all, $date_format) {
+function is_available_available_resources($building_id, $building_options, $start_time, $end_time, $resource_type = '- All -', $array_et, $resource_types, $array_fbld_field, 
+	$array_frn_field, $all, $date_format, $multi_id) {
 	
 	// Constants
 	$query = '';
@@ -365,7 +364,7 @@ function is_available_available_resources($building_id, $building_options, $star
 		$result = 
 			_is_available_execute_query($building_name, $start_time, $end_time, 
 			$resource_type, $array_et, $all,
-			$resource_types, $array_fbld_field, $array_frn_field, $date_format);
+			$resource_types, $array_fbld_field, $array_frn_field, $date_format, $multi_id);
 	}
 	return t($result);
 }
@@ -385,7 +384,7 @@ function is_available_available_resources($building_id, $building_options, $star
  */
 function _is_available_execute_query($building_name, $start_time, $end_time, 
 	$resource_type, $array_et, $all,
-	$resource_types, $array_fbld_field, $array_frn_field, $date_format) {
+	$resource_types, $array_fbld_field, $array_frn_field, $date_format, $multi_id) {
 	
 	$all_resources = ($resource_type == $all);
 	$all_buildings = ($building_name == $all);
@@ -414,7 +413,7 @@ function _is_available_execute_query($building_name, $start_time, $end_time,
 	$result = 
 		_is_available_get_empty_resource_query_result($mysql_query, $building_name, 
 		$start_time, $end_time, $resource_type, $resource_types, 
-		$buildings, $all_resources, $all_buildings, $get_result, $array_et);
+		$buildings, $all_resources, $all_buildings, $get_result, $array_et, $multi_id);
 	return $result;
 }
 
@@ -779,8 +778,7 @@ function _is_available_build_nested_temp_query(&$nested_query_temp_table, &$temp
  * 
  * @return $result Human-readable string result of the query.
  */
-function _is_available_get_empty_resource_query_result($mysql_query, $building_name, $start_time, 
-	$end_time, $resource_type, &$resource_types, &$buildings,  $all_types, $all_buildings, $get_result = 1, $array_et) {
+function _is_available_get_empty_resource_query_result($mysql_query, $building_name, $start_time, $end_time, $resource_type, &$resource_types, &$buildings,  $all_types, $all_buildings, $get_result = 1, $array_et, $multi_id) {
 
 	$type = $all_types ? 
 		"resource types" : $resource_types[$resource_type]->_is_available_get_plural_name();
@@ -803,6 +801,12 @@ function _is_available_get_empty_resource_query_result($mysql_query, $building_n
 	}
 
 	$time_interval = _is_available_get_time_interval_str($start_time, $end_time);
+	// Wrap the time interval
+	$tprefix = '<div class="is-available-result-free-time">';
+	$divsuffix = '</div>';
+	$aprefix = '<div class="is-available-result-header">';
+	$time_interval = $tprefix . $time_interval;
+	
 	// dpm("get_query: $mysql_query");
 	// Execute the query
 	$query = db_query($mysql_query);
@@ -835,11 +839,15 @@ function _is_available_get_empty_resource_query_result($mysql_query, $building_n
 		} 
 		$result = 'No available ' . $type;
 		$result .= $all_buildings ? '' : $in .  $building_name;
-		$result .= $time_interval;
+		$result .= $time_interval . $divsuffix;
 	}	else {
-		$result = $header . '<br>' . $resource_result; /*$time_interval . ': <br>' .*/ 
+		$result = $aprefix . $header . $time_interval . 
+		  ":$divsuffix$divsuffix". $resource_result;  
 	}
-	return $result;
+	$rprefix = '<div id="is-available-' . $multi_id . '-query-result" 
+	  class="is-available-query-result">';
+	  
+	return $rprefix . $result . $divsuffix;
 } 
 
 /**
