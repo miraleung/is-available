@@ -8,84 +8,86 @@
 		$('div[id^="configure-"]').attr('style', 'clear: both;');
 
 		/* Hide previous form stage elements */
-		Drupal.behaviors.is_available = {
-			attach: function (context, settings) {
-			 
-				$("div#configure-resource-type").mouseenter(function() {
-						if ($(this).find('div').length > 1) {
-								$(this).attr('style', 'clear: both;');
-								$(this).prev('#configure-title-entity-type').hide();
-								$('div#console').children('.messages.error').hide();
-						}
-				});
-				$("div#configure-resource-type").mouseleave(function() {
-						 $(this).parent().children('div.messages.error').hide();
-				});
+		$(document).ajaxComplete(function() {
+		  Drupal.behaviors.is_available = {
+			  attach: function (context, settings) {
+			   
+				  $("div#configure-resource-type").mouseenter(function() {
+						  if ($(this).find('div').length > 1) {
+								  $(this).attr('style', 'clear: both;');
+								  $(this).prev('#configure-title-entity-type').hide();
+								  $('div#console').children('.messages.error').hide();
+						  }
+				  });
+				  $("div#configure-resource-type").mouseleave(function() {
+						   $(this).parent().children('div.messages.error').hide();
+				  });
 				
 
-				$("div#configure-building").mouseenter(function() {
-						if ($(this).find('fieldset').length > 0) {
-								$(this).parent().find('p#step-2').hide();
-								$(this).parent().find('#resource-types').hide();
-								$(this).parent().find('div[style="display: block"]').hide();
-								$('div#console').children('.messages.error').hide();
-						}
-				});
-				$("div#configure-building").mouseleave(function() {
-						$(this).parent().find('div.messages.error').hide();
-				});
+				  $("div#configure-building").mouseenter(function() {
+						  if ($(this).find('fieldset').length > 0) {
+								  $(this).parent().find('p#step-2').hide();
+								  $(this).parent().find('#resource-types').hide();
+								  $(this).parent().find('div[style="display: block"]').hide();
+								  $('div#console').children('.messages.error').hide();
+						  }
+				  });
+				  $("div#configure-building").mouseleave(function() {
+						  $(this).parent().find('div.messages.error').hide();
+				  });
 				
 
-				$("div#configure-auth-building").mouseenter(function() {
-						if ($(this).find('fieldset').length > 0) {
-								$(this).parent().parent().find('p#step-3').hide();
-								$(this).siblings().each(function() {
-										if ($(this).get(0).tagName == "FIELDSET") {
-												$(this).hide();
-										}
-								});
-								$('div#console').children('.messages.error').hide();
-						}
-				});
-				$("div#configure-auth-building").mousedown(function() {
-						$(this).parent().find('div.messages.error').hide();
-				});
+				  $("div#configure-auth-building").mouseenter(function() {
+						  if ($(this).find('fieldset').length > 0) {
+								  $(this).parent().parent().find('p#step-3').hide();
+								  $(this).siblings().each(function() {
+										  if ($(this).get(0).tagName == "FIELDSET") {
+												  $(this).hide();
+										  }
+								  });
+								  $('div#console').children('.messages.error').hide();
+						  }
+				  });
+				  $("div#configure-auth-building").mousedown(function() {
+						  $(this).parent().find('div.messages.error').hide();
+				  });
 				
-				$("div#configure-entref").mouseenter(function() {
-						if ($(this).find('fieldset').length > 0) {
-								$(this).parent().parent().find('p#step-4').hide();
-								$(this).parent().find('fieldset[id^="edit-is-available-auth-building-"]').hide();
-								$(this).parent().find('fieldset[id^="edit-is-available-content-type-"]').hide();
-								$('div#console').children('.messages.error').hide();
-						}
-				});
-				$("div#configure-entref").mousedown(function() {
-						$(this).parent().find('div.messages.error').hide();
-				});
+				  $("div#configure-entref").mouseenter(function() {
+						  if ($(this).find('fieldset').length > 0) {
+								  $(this).parent().parent().find('p#step-4').hide();
+								  $(this).parent().find('fieldset[id^="edit-is-available-auth-building-"]').hide();
+								  $(this).parent().find('fieldset[id^="edit-is-available-content-type-"]').hide();
+								  $('div#console').children('.messages.error').hide();
+						  }
+				  });
+				  $("div#configure-entref").mousedown(function() {
+						  $(this).parent().find('div.messages.error').hide();
+				  });
 				
-				$("div#configure-date-table").mouseenter(function() {
-						if ($(this).find('fieldset').length > 0) {
-								$(this).parent().find('p#step-5').hide();
-								$(this).parent().find('fieldset[id^="edit-entref-"]').hide();
-								$('div#console').children('.messages.error').hide();
-						}
-				});
-				$("div#configure-date-table").mousedown(function() {
-						$(this).parent().find('div.messages.error').hide();
-				});
+				  $("div#configure-date-table").mouseenter(function() {
+						  if ($(this).find('fieldset').length > 0) {
+								  $(this).parent().find('p#step-5').hide();
+								  $(this).parent().find('fieldset[id^="edit-entref-"]').hide();
+								  $('div#console').children('.messages.error').hide();
+						  }
+				  });
+				  $("div#configure-date-table").mousedown(function() {
+						  $(this).parent().find('div.messages.error').hide();
+				  });
 				
-				$("div#edit-actions").mouseenter(function() {
-						if ($(this).find('input#edit-submit').length > 0) {
-								$(this).parent().find('p#step-6').hide();
-								$(this).parent().find('fieldset[id^="edit-is-available-date-"]').hide();
-								$('div#console').children('.messages.error').hide();
-						}
-				});
-				$("div#edit-actions").mousedown(function() {
-						$(this).parent().children('div.messages.error').hide();
-				});
-			}
-		};
+				  $("div#edit-actions").mouseenter(function() {
+						  if ($(this).find('input#edit-submit').length > 0) {
+								  $(this).parent().find('p#step-6').hide();
+								  $(this).parent().find('fieldset[id^="edit-is-available-date-"]').hide();
+								  $('div#console').children('.messages.error').hide();
+						  }
+				  });
+				  $("div#edit-actions").mousedown(function() {
+						  $(this).parent().children('div.messages.error').hide();
+				  });
+			  }
+		  };
+		});
 
 
 		/* Resource search form*/

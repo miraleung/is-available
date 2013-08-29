@@ -802,7 +802,8 @@ function _is_available_get_empty_resource_query_result($mysql_query, $building_n
 
 	$time_interval = _is_available_get_time_interval_str($start_time, $end_time);
 	// Wrap the time interval
-	$tprefix = '<div class="is-available-result-free-time">';
+	$tprefix = '<span class="is-available-result-free-time">';
+	$spansuffix = '</span>';
 	$divsuffix = '</div>';
 	$aprefix = '<div class="is-available-result-header">';
 	$time_interval = $tprefix . $time_interval;
@@ -841,7 +842,7 @@ function _is_available_get_empty_resource_query_result($mysql_query, $building_n
 		$result .= $time_interval . $divsuffix;
 	}	else {
 		$result = $aprefix . $header . $time_interval . 
-		  ":$divsuffix$divsuffix<br>". $resource_result;  
+		  ":$spansuffix$divsuffix<br>". $resource_result;  
 	}
 	$rprefix = '<div id="is-available-' . $multi_id . '-query-result" 
 	  class="is-available-query-result">';
