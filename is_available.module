@@ -112,7 +112,7 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 	$current_time_plus_hour = date($date_format, time() + 3600);
 	$current_time_plus_hour_rounded = 
 		_is_available_round_to_nearest_15_minutes($current_time_plus_hour, 1, $date_format); 
-	// // // dpm($current_time);
+
 	// Set the calendar
 	if (!isset($form_state['values']['cal_popup_start']))
 		$form_state['values']['cal_popup_start'] = $current_time_rounded;
@@ -567,7 +567,7 @@ function _is_available_get_empty_resource_query_object($building_name, $start_ti
 	
 	$mysql_query = 
 		$select_str . $inner_join_where_str . $bldg_check_str . $not_in_str;
-	// dpm("FROM QUERY_OBJ");  // dpm($mysql_query);
+
 	$query_object = 
 		new IsAvailableEmptyResourceQuery($delete_temp_table, $nested_query_temp_table, 
 		$mysql_query);
@@ -696,13 +696,13 @@ function _is_available_build_select_str_and_not_in(&$select_str, &$not_in_str,
 			$select_str .= $key . "." . $value . ", ";
 		}
 	}
-	// // // dpm($array_frn_field);
+
 	foreach ($array_frn_field as $key => $value) {
 		$value = _is_available_get_field_column($value);
 		$select_str .= $key . "." . $value . ", ";
 		$not_in_str .= $key . ".entity_id = Temp." . $temp_table_field . " OR ";
 	}
-	// // // dpm($select_str);
+
 	
 	$not_in_str = substr($not_in_str, 0, -4) . ")"; // remove last " OR "
 	if (!$all_resources) 	$select_str = substr($select_str, 0, -2) . " "; // remove last ", "
@@ -807,7 +807,6 @@ function _is_available_get_empty_resource_query_result($mysql_query, $building_n
 	$aprefix = '<div class="is-available-result-header">';
 	$time_interval = $tprefix . $time_interval;
 	
-	// // dpm("get_query: $mysql_query");
 	// Execute the query
 	$query = db_query($mysql_query);
 
@@ -842,7 +841,7 @@ function _is_available_get_empty_resource_query_result($mysql_query, $building_n
 		$result .= $time_interval . $divsuffix;
 	}	else {
 		$result = $aprefix . $header . $time_interval . 
-		  ":$divsuffix$divsuffix". $resource_result;  
+		  ":$divsuffix$divsuffix<br>". $resource_result;  
 	}
 	$rprefix = '<div id="is-available-' . $multi_id . '-query-result" 
 	  class="is-available-query-result">';
@@ -883,7 +882,7 @@ function _is_available_get_all_buildings_all_types_result($query, $resource_type
 	foreach ($temp_array as $temp) {
 		$resource_result .= $temp->_is_available_get_first();
 	}
-	// // dpm($resource_result);
+
 	return $resource_result;
 } 
 
@@ -941,7 +940,6 @@ function _is_available_get_not_all_buildings_all_types_result($query,
 		$rt_object = $resource_types[$rtype];
 		$frn_value = $rt_object->_is_available_get_room_number_field();
 		$resource = $building_name . " " . $r->$frn_value;
-		
 		_is_available_append_all_resource_types_query_result($temp_array, $resource, 
 			$rtype, $ender, $resources_so_far, $array_et);
 	}
@@ -1119,16 +1117,15 @@ function _is_available_append_all_resource_types_query_result(&$temp_array,
 		$markup_resource_type .= $resource_type . $ender. '</label>';
 		$markup_resource_type .= '<ul id="' . $resource_type . '">';
 		$temp_array[$rtype]->_is_available_set_first(
-			'<br> ' . $markup_resource_type . $resource . '</ul>');
-		// // dpm("IF " . $resource);
+		  $markup_resource_type . $resource . '</ul>');
+
 	} else {
 		if (in_array($resource, $resources_so_far)) return;
-		$current_result = substr($current_result, -5);
-		array_push($resources_so_far, $resource); //$r->$rbld_value . " " .
+		$current_result = substr($current_result, 0, -5);
+		array_push($resources_so_far, $resource); 
 		_is_available_room_link_markup($rnum, $rtype, $resource, $array_et);
 		$result_so_far = $temp_array[$rtype]->_is_available_get_first();
 		$temp_array[$rtype]->_is_available_set_first($current_result . $resource . '</ul>');
-		// // dpm("ELSE " . $resource);
 	} 
 	
 }
@@ -1139,7 +1136,6 @@ function _is_available_room_link_markup($rnum, $rtype, &$resource, $array_et) {
    if ($entity != NULL) {
      $euri = entity_uri('node', $entity);
      $entity_path = url($euri['path'], $euri['options']);
-  // dpm(entity_uri('node', reset(entity_load('node', array($nodeid)))));
      global $base_url;
      $resource = l($resource, $base_url . $entity_path, $euri['options']);
     }
@@ -1151,15 +1147,14 @@ function _is_available_append_not_all_resource_types_query_result(&$resource_res
 	
 	$rnum = explode(" ", $resource);
 	$rnum = $rnum[1];
-	if (strlen($resource_result) > 0)	{
-		if (in_array($resource, $resources_so_far)) return;
-		array_push($resources_so_far, $resource);
-		_is_available_room_link_markup($rnum, $rtype, $resource, $array_et);
-		$resource_result .=  ', ' . $resource;
-		return;
-	}
+	if (strlen($resource_result) > 0 && in_array($resource, $resources_so_far)) return;
+#		array_push($resources_so_far, $resource);
+#		_is_available_room_link_markup($rnum, $rtype, $resource, $array_et);
+#		$resource_result .=  $resource;
+#		return;
 	
 	array_push($resources_so_far, $resource);
+	_is_available_room_link_markup($rnum, $rtype, $resource, $array_et);
 	$resource_result .= $resource;
 }
 
@@ -1382,8 +1377,7 @@ function _is_available_initialize_resource_types_and_buildings_and_options($arra
 			}
 		}
 	}
-	// dpm(sizeof($array_rt_options));
-	// dpm($array_rt_options);
+  // if there is only one other option, remove the "- All -" option
 	if (sizeof($array_rt_options) <= 2) unset($array_rt_options[$all]);
 }
 
