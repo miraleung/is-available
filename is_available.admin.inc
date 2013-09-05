@@ -5,6 +5,25 @@
  * Admin settings form
  */
 
+/**
+  * Copyright 2013 Mira Leung
+  *
+  * This file is part of Is Available.
+  *
+  * Is Available is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 2 of the License, or
+  * (at your option) any later version.
+  *
+  * Is Available is distributed in the hope that it will be useful,
+  * but without any warranty; without even the implied warranty of
+  * merchantability or fitness for a particular purpose.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with Is Available.  If not, see <http://www.gnu.org/licenses/>.
+  */
+
 function is_available_settings($form, &$form_state, $module_name = 'is_available') {
 	
 	// Constants		
