@@ -887,8 +887,8 @@ function _is_available_get_all_buildings_all_types_result($query, $resource_type
 	$temp_array = array();
 	reset($resource_types);
 	
-	//$temp_array maps string -> IsAvailablePair<string, string> (see corresp. class in file)
-	// 	IsAvailableResourceType->machine_name => IsAvailablePair<resource_result_string, _is_available_get_title()>
+	//$temp_array maps string -> array(string, string) (see corresp. class in file)
+	// 	IsAvailableResourceType->machine_name => array(resource_result_string, _is_available_get_title())
 	$temp_array = _is_available_make_machine_name_string_title_pair($resource_types);
 	$resources_so_far = array();
 	foreach($query as $r) {
@@ -901,7 +901,7 @@ function _is_available_get_all_buildings_all_types_result($query, $resource_type
 	}
 	$resource_result = '';
 	foreach ($temp_array as $temp) {
-		$resource_result .= $temp->_is_available_get_first();
+		$resource_result .= $temp[0];
 	}
 
 	return $resource_result;
@@ -952,8 +952,8 @@ function _is_available_get_not_all_buildings_all_types_result($query,
 	$temp_array = array();
 	reset($resource_types);
 
-	//$temp_array maps string -> IsAvailablePair<string, string> (see corresp. class below)
-	// 	IsAvailableResourceType->machine_name => IsAvailablePair<resource_result_string, _is_available_get_title()>
+	//$temp_array maps string -> array(string, string) (see corresp. class below)
+	// 	IsAvailableResourceType->machine_name => array(resource_result_string, _is_available_get_title())
 	$temp_array = _is_available_make_machine_name_string_title_pair($resource_types);
 	$resources_so_far = array();	
 	foreach($query as $r) {
@@ -966,7 +966,7 @@ function _is_available_get_not_all_buildings_all_types_result($query,
 	}
 	
 	foreach ($temp_array as $temp) {
-		$resource_result .= $temp->_is_available_get_first();
+		$resource_result .= $temp[0];
 	}
 	return $resource_result;
 } 
@@ -1099,8 +1099,8 @@ function _is_available_round_to_nearest_15_minutes($some_date, $noworlater, $dat
 }
 
 /**
- * Constructs an associative array of IsAvailableResourceType => IsAvailablePair<string, string>, 
- * specifically IsAvailableResourceType => IsAvailablePair<'<br>', IsAvailableResourceType->_is_available_get_title()>
+ * Constructs an associative array of IsAvailableResourceType => array(string, string), 
+ * specifically IsAvailableResourceType => array('<br>', IsAvailableResourceType->_is_available_get_title())
  *
  * @param $resource_types The array of resource types 
  * (see resource type initializer function)
@@ -1110,7 +1110,7 @@ function _is_available_round_to_nearest_15_minutes($some_date, $noworlater, $dat
 function _is_available_make_machine_name_string_title_pair($resource_types) {
 	$assoc_array = array();
 	foreach ($resource_types as $rt) { 
-		$assoc_array[$rt->_is_available_get_machine_name()] = new IsAvailablePair('', $rt->_is_available_get_title());
+		$assoc_array[$rt->_is_available_get_machine_name()] = array('', $rt->_is_available_get_title());
 	}
 	return $assoc_array;
 }
@@ -1120,33 +1120,32 @@ function _is_available_make_machine_name_string_title_pair($resource_types) {
  * Adds the result from $resource to the existing result in the array
  * 
  * @param temp_array An associative array of IsAvailableResourceType =>
- *   IsAvailablePair<'resultsofar', IsAvailableResourceType->_is_available_get_title()>
+ *   array('resultsofar', IsAvailableResourceType->_is_available_get_title())
  * @param $resource The resource building/number 
  * @param $rtype The resource type as returned by the query (machine_name)
  * @param $ender The ender string for the result
  */
 function _is_available_append_all_resource_types_query_result(&$temp_array, 
 	$resource, $rtype, $ender, &$resources_so_far, $array_et) {
-	$current_result = $temp_array[$rtype]->_is_available_get_first();
+	$current_result = $temp_array[$rtype][0];
 	$rnum = explode(" ", $resource);
 	$rnum = $rnum[1];
 	if ($current_result == '') {
 		array_push($resources_so_far, $resource);
 		_is_available_room_link_markup($rnum, $rtype, $resource, $array_et);
-		$resource_type = $temp_array[$rtype]->_is_available_get_second();
+		$resource_type = $temp_array[$rtype][1];
 		$markup_resource_type = '<label for="' . $rtype . '">';
 		$markup_resource_type .= $resource_type . $ender. '</label>';
 		$markup_resource_type .= '<ul id="' . $resource_type . '">';
-		$temp_array[$rtype]->_is_available_set_first(
-		  $markup_resource_type . $resource . '</ul>');
+		$temp_array[$rtype][0] = $markup_resource_type . $resource . '</ul>';
 
 	} else {
 		if (in_array($resource, $resources_so_far)) return;
 		$current_result = substr($current_result, 0, -5);
 		array_push($resources_so_far, $resource); 
 		_is_available_room_link_markup($rnum, $rtype, $resource, $array_et);
-		$result_so_far = $temp_array[$rtype]->_is_available_get_first();
-		$temp_array[$rtype]->_is_available_set_first($current_result . $resource . '</ul>');
+		$result_so_far = $temp_array[$rtype][0];
+		$temp_array[$rtype][0] = $current_result . $resource . '</ul>';
 	} 
 	
 }

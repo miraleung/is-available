@@ -293,16 +293,16 @@ function _is_available_build_fsc_entity_types(&$form, $form_object, $nth_setting
 	$key_setting_options = $form_object->_is_available_get_key_setting_options();
 	$key_config_resource_type = $form_object->_is_available_get_key_config_resource_type();
 
-	// $entity_types['space'] = IsAvailablePair(IsAvailableEntityTaipe('space', 'Space'), array('title', ...))
-	$entity_type_pairs = _is_available_get_entity_types();
+	// $entity_types['space'] = array(IsAvailableEntityTaipe('space', 'Space'), array('title', ...))
+	$entity_type_ra = _is_available_get_entity_types();
 	$entity_type_names = array();
-	if (empty($entity_type_pairs)) {
+	if (empty($entity_type_ra)) {
 		return 0;
 	}
 	
-	foreach ($entity_type_pairs as $machine_name => $pair) {
-		$entity_type = $pair->_is_available_get_first();
-		$title_array = $pair->_is_available_get_second();
+	foreach ($entity_type_ra as $machine_name => $pair) {
+		$entity_type = $pair[0];
+		$title_array = $pair[1];
 		$entity_type_names[$machine_name] = $entity_type->_is_available_get_name();
 	}
 	
@@ -1190,10 +1190,12 @@ function _is_available_get_entity_types() {
 		foreach ($query2 as $q2) {
 			array_push($title_column_array, $q2->Field);
 		}
-		// $entity_types['space'] = IsAvailablePair(IsAvailableEntityTaipe('space', 
+		// $entity_types['space'] = array(IsAvailableEntityTaipe('space', 
 		//		'Space'), array('title', ...))
-		$entity_types[$q->name] = new IsAvailablePair(
-			new IsAvailableEntityTaipe($q->name, $q->label), $title_column_array);
+		$entity_types[$q->name] = array(
+			new IsAvailableEntityTaipe($q->name, $q->label), 
+			$title_column_array
+		);
 	}
 	return $entity_types;
 }

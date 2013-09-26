@@ -878,7 +878,7 @@ class IsAvailableBuilding {
 
 	/**
 	 * Your standard IsAvailablePair<T1, T2> class. :)
-	 */
+	 
 class IsAvailablePair {
 	private $first;
 	private $second;
@@ -913,5 +913,5 @@ class IsAvailablePair {
 		}
 		return $isEqual;
 	}
-}
+}*/
 
