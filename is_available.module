@@ -35,6 +35,38 @@ error_reporting(E_ALL);
 ini_set('display_errors', TRUE);
 ini_set('display_startup_errors', TRUE);
 
+// Constants
+// // Admin form constants
+define('IA_KEY_SETTING_OPTIONS', 'settings_options');
+define('IA_KEY_ENTITY_TYPES', 'entity_types');
+define('IA_KEY_SETTINGS', 'setting');
+define('IA_KEY_DISPLAY', 'setting_display');
+define('IA_KEY_TITLE_ET', 'title_entity_type');
+define('IA_KEY_ADD_SETTING', 'add_setting');
+define('IA_KEY_DEL_SETTING', 'delete_setting');
+define('IA_KEY_RESOURCE_TYPE', 'resource_type');
+define('IA_KEY_BUILDING', 'building');
+define('IA_KEY_RESOURCE_NUMBER', 'resource_number');
+define('IA_KEY_AUTH_BUILDINGS', 'auth_building');
+define('IA_KEY_CONTENT', 'content_type');
+define('IA_KEY_ENTREF', 'entref');
+define('IA_KEY_DATE', 'date_table');
+define('IA_KEY_SAVE_CONFIG', 'save_config');
+
+// Buttons
+define('IA_KEY_BUTTON', '_button');
+define('IA_KEY_FS_FORM_STAGE', 'z_array_form_stage');
+define('IA_KEY_CONFIG_WRAPPER', 'config-wrapper');
+
+// Other
+define('IA_MODULE_NAME', 'is_available');	
+define('IA_KEY_BLDG_TABLE', 'building_table');
+define('IA_KEY_RN_TABLE', 'resource_number_table');
+define('IA_KEY_BRN_TABLE', 'brn_table');
+define('IA_KEY_ENTITY_TYPE', 'entity_type');
+define('IA_ALPHABET', '123456789');
+define('IA_OPTIONS_WRAPPER', 'setting-options');
+
 /**
  * Implements hook_menu().
  */
@@ -1241,7 +1273,7 @@ function is_available_block_configure($delta = '', $multi_id = NULL) {
 	}
 	
 	$form_object 			= new IsAvailableAdminSettingsForm;
-	$module_name 			= $form_object->_is_available_get_module_name();
+	$module_name 			= IA_MODULE_NAME;
 	$setting_options 	= _is_available_get_radios_setting_options($multi_id);
 	$setting_key 		= $module_name . '_block_setting_' . $multi_id;
 	
@@ -1269,7 +1301,7 @@ function is_available_block_save($delta = '', $edit = array()) {
 		return;
 	}
 	$form_object 		= new IsAvailableAdminSettingsForm;
-	$module_name 		= $form_object->_is_available_get_module_name();
+	$module_name 		= IA_MODULE_NAME;
 	$multi_id				= $edit['multiblock_delta']['#value'];
 	$setting_key 		= $module_name . '_block_setting_' . $multi_id;
 	$setting_title	= strtr($setting_key, array('setting' => 'title'));
@@ -1291,7 +1323,7 @@ function is_available_block_view($delta = '', $multi_id = NULL) {
 	}
 	
 	$form_object 	= new IsAvailableAdminSettingsForm;
-	$module_name 	= $form_object->_is_available_get_module_name();
+	$module_name 	= IA_MODULE_NAME;
 	$title				= $module_name . '_block_setting_' . $multi_id;
 	$setting_id 	= variable_get($title, '');
 	$array_et 		= _is_available_block_view_get_entity_types($setting_id, $form_object);
@@ -1310,7 +1342,7 @@ function is_available_block_view($delta = '', $multi_id = NULL) {
 
 function _is_available_get_radios_setting_options($multi_id) {
 	$form_object = new IsAvailableAdminSettingsForm;
-	$module_name = $form_object->_is_available_get_module_name();
+	$module_name = IA_MODULE_NAME;
 	$leading_str = mysql_real_escape_string($module_name . '_settings_title_');
 	$leading_str_strlen = strlen($leading_str);
 	$alpha			 = $form_object->_is_available_get_alphabet();
@@ -1410,8 +1442,8 @@ function _is_available_initialize_resource_types_and_buildings_and_options($arra
  */
 function _is_available_block_view_get_entity_types($setting_id, $form_object) {
 	// e.g. is_available_entity_type_a_space
-	$module_name			= $form_object->_is_available_get_module_name();
-	$key_entity_type	= $form_object->_is_available_get_key_entity_type();
+	$module_name			= IA_MODULE_NAME;
+	$key_entity_type	= IA_KEY_ENTITY_TYPE;
 	$key_entity_type 	= 
 		$module_name . '_' . $key_entity_type . '_' . $setting_id . '_';
 	$leading_strlen		= strlen($key_entity_type);
@@ -1439,8 +1471,8 @@ function _is_available_block_view_get_entity_types($setting_id, $form_object) {
 function _is_available_block_view_get_resource_types(&$array_et_objects, 
 	$setting_id, $form_object) {
 	// is_available_resource_type_a_space_meeting_resource
-	$module_name		= $form_object->_is_available_get_module_name();
-	$key_resource_type	= $form_object->_is_available_get_key_resource_type();
+	$module_name		= IA_MODULE_NAME;
+	$key_resource_type	= IA_KEY_RESOURCE_TYPE;
 	$key_resource_type 	= 
 		$module_name . '_' . $key_resource_type . '_' . $setting_id . '_';
 	
@@ -1486,10 +1518,10 @@ function _is_available_configure_resource_type(&$rt_object, $et_machine_name,
 
 function _is_available_block_view_get_rt_brn_table(&$rt_object, $et_machine_name, $setting_id, $form_object) {
 	// is_available_building_table_a_space_meeting_resource
-	$module_name		= $form_object->_is_available_get_module_name();
+	$module_name		= IA_MODULE_NAME;
 	$et_rt 					= $et_machine_name . '_' . $rt_object->_is_available_get_machine_name();
-	$key_building 	= $form_object->_is_available_get_key_building_table();
-	$key_rn					= $form_object->_is_available_get_key_resource_number_table();
+	$key_building 	= IA_KEY_BLDG_TABLE;
+	$key_rn					= IA_KEY_RN_TABLE;
 	
 	$building_term 	= $module_name . '_' . $key_building . '_' . $setting_id .	'_' . $et_rt;
 	$rn_term				= $module_name . '_' . $key_rn . '_' . $setting_id . 	'_' . $et_rt;
@@ -1504,9 +1536,9 @@ function _is_available_block_view_get_rt_brn_table(&$rt_object, $et_machine_name
 function _is_available_block_view_get_auth_buildings(&$rt_object, $et_machine_name, $setting_id, $form_object) {
 	// is_available_auth_building_a_space_mr_FSC
 	$ret_array					= array(); // an array of building objects
-	$module_name				= $form_object->_is_available_get_module_name();
+	$module_name				= IA_MODULE_NAME;
 	$et_rt 							= $et_machine_name . '_' . $rt_object->_is_available_get_machine_name();
-	$key_auth_building 	= $form_object->_is_available_get_key_auth_buildings();
+	$key_auth_building 	= IA_KEY_AUTH_BUILDINGS;
 	$key_auth_building	= $module_name . '_' . $key_auth_building . '_' . $setting_id . '_' . $et_rt . '_';
 	$leading_strlen			= strlen($key_auth_building);
 	$query = _is_available_block_view_helper_get_varname_like_query($key_auth_building);
@@ -1531,8 +1563,8 @@ function _is_available_block_view_get_auth_buildings(&$rt_object, $et_machine_na
 function _is_available_block_view_get_entref_date_tables(&$rt_object, $et_machine_name, $setting_id, $form_object) {
 	// is_available_entref_space_meeting_resource_event_a
 	// is_available_date_space_meeting_resource_a_event
-	$module_name 	= $form_object->_is_available_get_module_name();
-	$key_entref		= $form_object->_is_available_get_key_entref();
+	$module_name 	= IA_MODULE_NAME;
+	$key_entref		= IA_KEY_ENTREF;
 	$key_date			= 'date';
 	$et_rt				= $et_machine_name . '_' . $rt_object->_is_available_get_machine_name();
 	$key_entref 	= $module_name . '_' . $key_entref . '_' . $et_rt . '_';
@@ -1567,8 +1599,8 @@ function _is_available_block_view_get_content_types(&$rt_object, $et_machine_nam
 	$setting_id, $form_object) {
 	
 	// is_available_content_type_space_meeting_resource_a_event
-	$module_name 			= $form_object->_is_available_get_module_name();
-	$key_content_type	= $form_object->_is_available_get_key_content_type();
+	$module_name 			= IA_MODULE_NAME;
+	$key_content_type	= IA_KEY_CONTENT;
 	$et_rt						= $et_machine_name . '_' . $rt_object->_is_available_get_machine_name();
 	$key_content_type	= $module_name . '_' . $key_content_type . '_' . $et_rt . '_' . $setting_id . '_';
 	$leading_strlen		= strlen($key_content_type);

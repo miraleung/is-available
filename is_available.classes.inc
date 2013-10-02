@@ -1,4 +1,4 @@
-﻿
+
 <?php
 
 /**
@@ -445,20 +445,20 @@ class IsAvailableAdminSettingsForm {
 	 */
 	function _is_available_get_settings_options() {
 		$array_return = array();
-		$j = $this->_is_available_get_settings_count($this->_is_available_get_module_name());
+		$j = $this->_is_available_get_settings_count(IA_MODULE_NAME);
 		$i ='a';
 		$alphabet = $this->ALPHABET;
 		$count = substr($alphabet, $j-1, 1);
 		if ($j == 0) {
-			$name = variable_get($this->_is_available_get_module_name() . '_settings_title_1', "");
+			$name = variable_get(IA_MODULE_NAME . '_settings_title_1', "");
 			if ($name == "") {
 				$name = 'Setting 1 (unconfigured)';
-				variable_set($this->_is_available_get_module_name() . '_settings_title_1', $name);
+				variable_set(IA_MODULE_NAME . '_settings_title_1', $name);
 			}
 			$array_return = array('a' => $name);
 		} else {
 		$setting_title = 
-			mysql_real_escape_string($this->_is_available_get_module_name() . "_settings_title_");
+			mysql_real_escape_string(IA_MODULE_NAME . "_settings_title_");
 		$mysql_query = 
 			"SELECT name FROM variable WHERE name LIKE '$setting_title%'";
 		$query = db_query($mysql_query);
@@ -476,7 +476,7 @@ class IsAvailableAdminSettingsForm {
 	 * Count the number of settings, by title (settings may not have been set yet).
 	 */
 	function _is_available_get_settings_count($module_name = '') {
-		$module_name = mysql_real_escape_string($this->_is_available_get_module_name());
+		$module_name = mysql_real_escape_string(IA_MODULE_NAME); //IA_MODULE_NAME);
 		$mysql_query = 
 			"SELECT COUNT(DISTINCT name) as cnt 
 			FROM variable WHERE name LIKE '" . $module_name . "_settings_title%'";
@@ -489,19 +489,17 @@ class IsAvailableAdminSettingsForm {
 	}
 	
 	// Getters
-	function _is_available_get_key_setting_options() 		{ return $this->KEY_SETTING_OPTIONS; }
-	function _is_available_get_key_entity_types()			{ return $this->KEY_ENTITY_TYPES; }
+	//function _is_available_get_key_setting_options() 		{ return $this->KEY_SETTING_OPTIONS; }
+	//function _is_available_get_key_entity_types()			{ return $this->KEY_ENTITY_TYPES; }
 	
-	function _is_available_get_module_name()				 	{ return $this->MODULE_NAME; }
-	function _is_available_get_key_button()						{ return $this->KEY_BUTTON; }
+// 	function _is_available_get_module_name()				 	{ return $this->MODULE_NAME; }
+	// function _is_available_get_key_button()						{ return $this->KEY_BUTTON; }
 	
 	function _is_available__is_available_get_key_config_settings() { 
 		return $this->_is_available_get_configure_key($this->KEY_SETTINGS); 
 	}
 	
-	function _is_available_get_key_config_settings()	{ 
-		return $this->KEY_DISPLAY; 
-	}
+//	function _is_available_get_key_config_settings()	{ return $this->KEY_DISPLAY; 	}
 	
 	function _is_available_get_key_config_resource_type()	{ 
 		return $this->_is_available_get_configure_key($this->KEY_RESOURCE_TYPE); 
@@ -531,17 +529,13 @@ class IsAvailableAdminSettingsForm {
 		return $this->_is_available_get_configure_key($this->KEY_DATE); 
 	}
 	
-	function _is_available_get_key_save_config() { 
-		return $this->KEY_SAVE_CONFIG; 
-	}
+	// function _is_available_get_key_save_config() { return $this->KEY_SAVE_CONFIG; }
 	
 	function _is_available_get_wrapper_settings() { 
 		return $this->_is_available_get_wrapper($this->KEY_SETTINGS); 
 	}
 	
-	function _is_available_get_wrapper_options() { 
-		return $this->OPTIONS_WRAPPER; 
-	}
+	// function _is_available_get_wrapper_options() { return $this->OPTIONS_WRAPPER; }
 	
 	function _is_available_get_wrapper_setting_display() { 
 		return str_replace('_', '-', $this->KEY_DISPLAY); 
@@ -591,19 +585,19 @@ class IsAvailableAdminSettingsForm {
 		return str_replace('_', '-', $this->KEY_SAVE_CONFIG); 
 	}
 	
-	function _is_available_get_key_add_setting()			{ return $this->KEY_ADD_SETTING; }
-	function _is_available_get_key_delete_setting()		{ return $this->KEY_DEL_SETTING; }
-	function _is_available_get_key_entity_type()			{ return $this->KEY_ENTITY_TYPE; }
-	function _is_available_get_key_resource_type()		{ return $this->KEY_RESOURCE_TYPE; }
-	function _is_available_get_key_brn_table()				{ return $this->KEY_BRN_TABLE; }
-	function _is_available_get_key_auth_buildings()		{ return $this->KEY_AUTH_BUILDINGS; }
-	function _is_available_get_key_content_type()			{ return $this->KEY_CONTENT; }
-	function _is_available_get_key_entref()						{ return $this->KEY_ENTREF; }
-	function _is_available_get_key_date()							{ return $this->KEY_DATE; }
+	//function _is_available_get_key_add_setting()			{ return $this->KEY_ADD_SETTING; }
+	// function _is_available_get_key_delete_setting()		{ return $this->KEY_DEL_SETTING; }
+	//function _is_available_get_key_entity_type()			{ return $this->KEY_ENTITY_TYPE; }
+	// function _is_available_get_key_resource_type()		{ return $this->KEY_RESOURCE_TYPE; }
+// 	function _is_available_get_key_brn_table()				{ return $this->KEY_BRN_TABLE; }
+// 	function _is_available_get_key_auth_buildings()		{ return $this->KEY_AUTH_BUILDINGS; }
+	// function _is_available_get_key_content_type()			{ return $this->KEY_CONTENT; }
+// 	function _is_available_get_key_entref()						{ return $this->KEY_ENTREF; }
+	// function _is_available_get_key_date()							{ return $this->KEY_DATE; }
 	
-	function _is_available_get_key_fs_form_stage()		{ return $this->KEY_FS_FORM_STAGE; }
-	function _is_available_get_key_building_table()		{ return $this->KEY_BLDG_TABLE; }
-	function _is_available_get_key_resource_number_table() { return $this->KEY_RN_TABLE; }
+	// function _is_available_get_key_fs_form_stage()		{ return $this->KEY_FS_FORM_STAGE; }
+	// function _is_available_get_key_building_table()		{ return $this->KEY_BLDG_TABLE; }
+	//function _is_available_get_key_resource_number_table() { return $this->KEY_RN_TABLE; }
 	
 	function _is_available_get_alphabet()							{ return $this->ALPHABET; }
 	
@@ -619,11 +613,11 @@ class IsAvailableAdminSettingsForm {
 	 * @return The key with 'configure_' appended to the front
 	 */
 	function _is_available_get_configure_key($key)	{ 
-		return $this->_is_available_get_module_name() . '_configure_' . $key; 
+		return IA_MODULE_NAME . '_configure_' . $key; 
 	}
 	
 	function _is_available_get_key_only($key_with_module_name) { 
-		return substr($key_with_module_name, strlen($this->_is_available_get_module_name()) + 1); 
+		return substr($key_with_module_name, strlen(IA_MODULE_NAME) + 1); 
 	}
 	function _is_available_get_wrapper($key) { 
 		return 'configure-' . str_replace('_', '-', $key); 

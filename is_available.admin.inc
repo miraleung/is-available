@@ -39,7 +39,7 @@ function is_available_settings($form, &$form_state, $module_name = 'is_available
 	$array_resource_types = array();
 	
 	// // // Form object variables
-	$key_setting_options 	= $form_object->_is_available_get_key_setting_options();
+	$key_setting_options 	= IA_KEY_SETTING_OPTIONS;
 	$key_config_content 	= $form_object->_is_available_get_wrapper_content();
 	
 	// // Booleans
@@ -151,10 +151,10 @@ function is_available_settings($form, &$form_state, $module_name = 'is_available
  * @param $form_object
  */
 function _is_available_build_form_setting_options(&$form, $form_object) {
-	$key_setting_options = $form_object->_is_available_get_key_setting_options();
+	$key_setting_options = IA_KEY_SETTING_OPTIONS;
 	$array_settings_options = $form_object->_is_available_get_settings_options();
 	$wrapper = $form_object->_is_available_get_wrapper_settings(); 
-	$options_wrapper = $form_object->_is_available_get_wrapper_options();
+	$options_wrapper = IA_OPTIONS_WRAPPER;
 	
 	$form['notes'] = array(
 		 '#markup' => '<i><p>How to use this form <p>' .
@@ -187,7 +187,7 @@ function _is_available_build_form_setting_options(&$form, $form_object) {
 
 function _is_available_build_form_setting_display(&$form, &$form_state, $form_object) {
 
-	$key_setting_options = $form_object->_is_available_get_key_setting_options();
+	$key_setting_options = IA_KEY_SETTING_OPTIONS;
 	$array_settings_options = $form_object->_is_available_get_settings_options();
 	$key = $form_object->_is_available__is_available_get_key_config_settings();
 	$wrapper = $form_object->_is_available_get_wrapper_setting_display();
@@ -226,9 +226,9 @@ function _is_available_build_form_setting_display(&$form, &$form_state, $form_ob
 function _is_available_build_form_setting_configuration(&$form, &$form_state, $form_object, 
 	$nth_setting, &$array_entity_types, $bool) {
 	
-	$module_name = $form_object->_is_available_get_module_name();
+	$module_name = IA_MODULE_NAME;
 	$key_config_settings = $form_object->_is_available__is_available_get_key_config_settings();
-	$key_setting_options = $form_object->_is_available_get_key_setting_options();
+	$key_setting_options = IA_KEY_SETTING_OPTIONS;
 	
 	_is_available_build_form_setting_display($form, $form_state, $form_object);
 	_is_available_build_fsc_original_title($form, $form_object, $nth_setting); 
@@ -248,9 +248,9 @@ function _is_available_build_form_setting_configuration(&$form, &$form_state, $f
 
 
 function _is_available_build_fsc_original_title(&$form, $form_object, $nth_setting) {
-	$module_name = $form_object->_is_available_get_module_name();
+	$module_name = IA_MODULE_NAME;
 	$key_config_settings = $form_object->_is_available__is_available_get_key_config_settings();
-	$key_setting_options = $form_object->_is_available_get_key_setting_options();
+	$key_setting_options = IA_KEY_SETTING_OPTIONS;
 	$key_config_resource_type = $form_object->_is_available_get_key_config_resource_type();
 	$title_wrapper = $form_object->_is_available_get_wrapper_title();	
 	
@@ -273,7 +273,7 @@ function _is_available_build_fsc_original_title(&$form, $form_object, $nth_setti
 
 function _is_available_build_fsc_title_textfield(&$form, $form_object, $nth_setting, $bool) {
 	$key_config_settings = $form_object->_is_available__is_available_get_key_config_settings();
-	$key_setting_options = $form_object->_is_available_get_key_setting_options();
+	$key_setting_options = IA_KEY_SETTING_OPTIONS;
 	$key_config_resource_type = $form_object->_is_available_get_key_config_resource_type();
 	
 	$form[$key_config_settings]
@@ -288,9 +288,9 @@ function _is_available_build_fsc_title_textfield(&$form, $form_object, $nth_sett
 }
 
 function _is_available_build_fsc_entity_types(&$form, $form_object, $nth_setting, $bool) {
-	$module_name = $form_object->_is_available_get_module_name();
+	$module_name = IA_MODULE_NAME;
 	$key_config_settings = $form_object->_is_available__is_available_get_key_config_settings();
-	$key_setting_options = $form_object->_is_available_get_key_setting_options();
+	$key_setting_options = IA_KEY_SETTING_OPTIONS;
 	$key_config_resource_type = $form_object->_is_available_get_key_config_resource_type();
 
 	// $entity_types['space'] = array(IsAvailableEntityTaipe('space', 'Space'), array('title', ...))
@@ -422,9 +422,9 @@ function _is_available_build_form_config_building_table(&$form, $form_state,
 
 function _is_available_build_form_building_options(&$form, $form_object, $nth_setting, $checked_et_rt) { 
 	$key_building = $form_object->_is_available_get_key_config_building();
-	$str_start_et = $form_object->_is_available_get_module_name() . 
+	$str_start_et = IA_MODULE_NAME . 
 		'_entity_type_'; // + n_<entity_type>
-	$str_start_rt = $form_object->_is_available_get_module_name() . 
+	$str_start_rt = IA_MODULE_NAME . 
 	'_resource_type_'; // + n_<entity_type>_<resource_type>
 	$str_start_et_len = strlen($str_start_et) + strlen($nth_setting . "_");
 	$str_start_rt_len = strlen($str_start_rt) + strlen($nth_setting . "_");
@@ -581,7 +581,7 @@ function _is_available_build_form_config_content_types(&$form, $form_state, $for
 	$nth_setting, &$array_resource_types) {
 	
 	$key_content 	= $form_object->_is_available_get_key_config_auth_buildings(); 
-	$key_ct 			= $form_object->_is_available_get_key_content_type();
+	$key_ct 			= IA_KEY_CONTENT;
 	// form stage control done outside
 	
 	foreach ($array_resource_types as $rt_machine_name => $object) {
@@ -619,8 +619,8 @@ function _is_available_build_form_config_entref(&$form, $form_state, $form_objec
 	$nth_setting, $array_resource_types, $bool_has_checked_auth_bldgs) {
 	
 	$key_config_entref	= $form_object->_is_available_get_key_config_entref();
-	$key_ct							= $form_object->_is_available_get_key_content_type();
-	$key_entref					= $form_object->_is_available_get_key_entref();
+	$key_ct							= IA_KEY_CONTENT;
+	$key_entref					= IA_KEY_ENTREF;
 	$entref_wrapper 		= $form_object->_is_available_get_wrapper_entref();
 	$bool_build_entref_button = TRUE;
 	
@@ -665,7 +665,7 @@ function _is_available_build_form_config_entref(&$form, $form_state, $form_objec
 			foreach ($content_types as $c => $value) {
 				// is_available_entref_space_meeting_resource_event_1
 				$leading_strlen = 
-					_is_available_get_content_type_leading_strlen($form_object->_is_available_get_module_name(), 
+					_is_available_get_content_type_leading_strlen(IA_MODULE_NAME, 
 						$et_machine_name, $rt_machine_name, $nth_setting);
 				$ct = substr($c, $leading_strlen);
 				
@@ -695,7 +695,7 @@ function _is_available_build_form_config_date(&$form, $form_state, $form_object,
 	$nth_setting, $array_resource_types, $bool__is_available_has_selected_entref) {
 	
 	$key_date = $form_object->_is_available_get_key_config_date();
-	$key_entref	= $form_object->_is_available_get_key_entref();
+	$key_entref	= IA_KEY_ENTREF;
 	$date_wrapper = $form_object->_is_available_get_wrapper_date();
 
 	if (!$bool__is_available_has_selected_entref) {
@@ -730,7 +730,7 @@ function _is_available_build_form_config_date(&$form, $form_state, $form_object,
 	
 		foreach ($content_types as $ct_form_key => $value) {
 			$leading_strlen = 
-				_is_available_get_content_type_leading_strlen($form_object->_is_available_get_module_name(),
+				_is_available_get_content_type_leading_strlen(IA_MODULE_NAME,
 				$et_machine_name, $rt_machine_name, $nth_setting);
 			$ct = substr($ct_form_key, $leading_strlen);
 			$date_options = _is_available_get_date_options($ct);
@@ -791,7 +791,7 @@ function _is_available_build_form_setting_buttons(&$form, $form_object,
 	$int_sizeof_setting_options) {
 
 	$count = $int_sizeof_setting_options; 
-	$key_setting_options 	= $form_object->_is_available_get_key_setting_options();
+	$key_setting_options 	= IA_KEY_SETTING_OPTIONS;
 
 	if ($count > 0) _is_available_build_form_select_setting_button($form, $form_object);
 	_is_available_build_form_add_setting_button($form, $form_object);
@@ -804,9 +804,9 @@ function _is_available_build_form_setting_buttons(&$form, $form_object,
 function _is_available_build_form_select_setting_button(&$form, $form_object) {
 	$key_config_settings = 
 		$form_object->_is_available_get_key_only($form_object->_is_available__is_available_get_key_config_settings());
-	$key_button = $form_object->_is_available_get_key_button();
+	$key_button = IA_KEY_BUTTON;
 	$setting_config_wrapper = $form_object->_is_available_get_wrapper_settings();
-	$key_setting_options = $form_object->_is_available_get_key_setting_options();
+	$key_setting_options = IA_KEY_SETTING_OPTIONS;
 	
 	_is_available_build_form_generic_ajax_button($form, $key_setting_options, 
 		$key_config_settings . $key_button, 
@@ -817,10 +817,10 @@ function _is_available_build_form_select_setting_button(&$form, $form_object) {
 }
 
 function _is_available_build_form_add_setting_button(&$form, $form_object) {
-	$key_add_setting = $form_object->_is_available_get_key_add_setting();
-	$key_button = $form_object->_is_available_get_key_button();
+	$key_add_setting = IA_KEY_ADD_SETTING;
+	$key_button = IA_KEY_BUTTON;
 	$add_setting_wrapper = $form_object->_is_available_get_wrapper_add_setting();
-	$key_setting_options = $form_object->_is_available_get_key_setting_options();
+	$key_setting_options = IA_KEY_SETTING_OPTIONS;
 	
 	$form[$key_setting_options][$key_add_setting . $key_button] = array(
 		'#type' => 'submit',
@@ -832,10 +832,10 @@ function _is_available_build_form_add_setting_button(&$form, $form_object) {
 }
 
 function _is_available_build_form_delete_setting_button(&$form, $form_object) {
-	$key_del_setting = $form_object->_is_available_get_key_delete_setting();
-	$key_button = $form_object->_is_available_get_key_button();
+	$key_del_setting = IA_KEY_DEL_SETTING;
+	$key_button = IA_KEY_BUTTON;
 	$del_setting_wrapper = $form_object->_is_available_get_wrapper_delete_setting();
-	$key_setting_options = $form_object->_is_available_get_key_setting_options();
+	$key_setting_options = IA_KEY_SETTING_OPTIONS;
 	
 	$form[$key_setting_options][$key_del_setting . $key_button] = array(
 		'#type' => 'submit',
@@ -863,7 +863,7 @@ function is_available_reset_form($form, $form_state) {
 function _is_available_build_fsc_select_entity_type_button(&$form, $form_state, 
 	$form_object, $array_entity_types, $key_config_settings) {
 	
-	$module_name = $form_object->_is_available_get_module_name();
+	$module_name = IA_MODULE_NAME;
 	if ($key_config_settings  == "") 
 		$key_config_settings = $form_object->_is_available__is_available_get_key_config_settings();
 	$key_config_content 	= $form_object->_is_available_get_key_config_content();
@@ -1057,7 +1057,7 @@ function ajax_select_date_callback(&$form, &$form_state) {
 
 function is_available_form_add_setting_rebuild($form, $form_state) {
 	$form_object = new IsAvailableAdminSettingsForm;
-	$module_name = $form_object->_is_available_get_module_name();
+	$module_name = IA_MODULE_NAME;
 	$alphabet = '123456789';
 	$count = _is_available_get_setting_multi_id_min_unused_id($module_name, $alphabet);
 	_is_available_insert_into_variable_new_setting($count, $module_name);
@@ -1066,12 +1066,12 @@ function is_available_form_add_setting_rebuild($form, $form_state) {
 
 function is_available_form_delete_setting_rebuild(&$form, $form_state) {
 	$form_object = new IsAvailableAdminSettingsForm;
-	$key_setting_options 	= $form_object->_is_available_get_key_setting_options();
+	$key_setting_options 	= IA_KEY_SETTING_OPTIONS;
 	$bool_setting_selected = isset($form_state['values'][$key_setting_options]); 
 	$nth_setting = $bool_setting_selected ? 
 		$form_state['values'][$key_setting_options] : 
 		'a';
-	$module_name = $form_object->_is_available_get_module_name();
+	$module_name = IA_MODULE_NAME;
 	
 	global $conf;
 	
@@ -1157,7 +1157,7 @@ function _is_available_get_checked_et_rt(&$form_state, $checked_entity_types,
 	
 	$ret_array = array();
 	$form_object = new IsAvailableAdminSettingsForm;
-	$mod_name = $form_object->_is_available_get_module_name();
+	$mod_name = IA_MODULE_NAME;
 	foreach ($checked_entity_types as $et_key => $et_value) {
 		// is_available_entity_type_1_space
 		// is_available_resource_type_1_space_classresource
@@ -1241,7 +1241,7 @@ function _is_available_get_checked_auth_buildings($form_state, $form_object,
 		// is_available_auth_building_1_space_meeting_resource_ICCS 
 		foreach ($rt_array as $rt) {
 			// auth_building_1_space_meeting_resource
-			$term = $form_object->_is_available_get_key_auth_buildings() . 
+			$term = IA_KEY_AUTH_BUILDINGS . 
 				'_' . $nth_setting . '_' . $et . '_' . $rt;
 			$ret_array[$et . '_' . $rt] =	_is_available_get_checked_only($form_state, $term);
 		}
@@ -1320,9 +1320,9 @@ function _is_available_get_date_options($content_type) {
 function _is_available_get_form_stage_n_element_array($form_state_values, $nth_setting) {
 	if (empty($form_state_values)) $form_state_values = array();
 	$form_object 	= new IsAvailableAdminSettingsForm;
-	$mod_name 		= $form_object->_is_available_get_module_name(); 
+	$mod_name 		= IA_MODULE_NAME; 
 	// settings_options
-	$key_setting_options 	= $form_object->_is_available_get_key_setting_options(); 
+	$key_setting_options 	= IA_KEY_SETTING_OPTIONS; 
 	
 	// is_available_entity_type_1_||space
 	$key_entity_type = 
@@ -1330,20 +1330,20 @@ function _is_available_get_form_stage_n_element_array($form_state_values, $nth_s
 	
 	// is_available_resource_type_1_||space_meeting_resource
 	$key_resource_type = 
-		_is_available_append_nth($form_object->_is_available_get_key_resource_type(), $nth_setting) . '_';
+		_is_available_append_nth(IA_KEY_RESOURCE_TYPE, $nth_setting) . '_';
 	
 	// is_available_building_table_1_||space_classresource
 	$key_bldg_table	= 
-		_is_available_append_nth($form_object->_is_available_get_key_building_table(),  $nth_setting) . '_';
+		_is_available_append_nth(IA_KEY_BLDG_TABLE,  $nth_setting) . '_';
 	
 	// is_available_resource_number_table_1_||space_classresource
 	$key_rn_table	= 
-		_is_available_append_nth($form_object->_is_available_get_key_resource_number_table(), 
+		_is_available_append_nth(IA_KEY_RN_TABLE, 
 		$nth_setting) . '_';
 	
 	// is_available_auth_building_1_space_meeting_resource_ICCS
 	$key_auth_building = 
-		_is_available_append_nth($form_object->_is_available_get_key_auth_buildings(), $nth_setting) . '_';
+		_is_available_append_nth(IA_KEY_AUTH_BUILDINGS, $nth_setting) . '_';
 		
 	// is_available_content_type_space_meeting_resource_1_event
 	$key_content_type = $mod_name . '_content_type_';
@@ -1376,13 +1376,13 @@ function _is_available_get_form_stage_n_element_array($form_state_values, $nth_s
 	
 	$ret_array = array(
 		$key_setting_options 										=> $a, 
-		$form_object->_is_available_get_key_entity_type()			=> $b, 
-		$form_object->_is_available_get_key_resource_type()		=> $c,
-		$form_object->_is_available_get_key_brn_table()				=> $d, 
-		$form_object->_is_available_get_key_auth_buildings()	=> $e,
-		$form_object->_is_available_get_key_content_type()	 	=> $f, 
-		$form_object->_is_available_get_key_entref()					=> $g,
-		$form_object->_is_available_get_key_date() 						=> $h,
+		IA_KEY_ENTITY_TYPE			=> $b, 
+		IA_KEY_RESOURCE_TYPE		=> $c,
+		IA_KEY_BRN_TABLE				=> $d, 
+		IA_KEY_AUTH_BUILDINGS	=> $e,
+		IA_KEY_CONTENT	 	=> $f, 
+		IA_KEY_ENTREF					=> $g,
+		IA_KEY_DATE 						=> $h,
 	);
 	return $ret_array;
 }
@@ -1394,7 +1394,7 @@ function _is_available_get_checkboxes_value($form_state, $string, $n = -1) {
 	$term .= ($n != -1) ? $n . '_' : '';
 	$term_string_length = strlen($term);
 	
-	$mod_name = $form_object->_is_available_get_module_name();
+	$mod_name = IA_MODULE_NAME;
 	if (empty($form_state['values'])) return $ret_array;
 	foreach ($form_state['values'] as $k => $f) {
 		if (substr($k, 0, strlen($mod_name) + 
@@ -1520,39 +1520,39 @@ function _is_available_at_this_stage($array_fsne, $key1, $key2) {
 function _is_available_is_checked($item) { return $item == 1; }
 
 function _is_available_is_at_entity_type($form_object, $array_fsne) {
-	$key_setting_options 	= $form_object->_is_available_get_key_setting_options();
-	$key_entity_type 			= $form_object->_is_available_get_key_entity_type();
+	$key_setting_options 	= IA_KEY_SETTING_OPTIONS;
+	$key_entity_type 			= IA_KEY_ENTITY_TYPE;
 	return $array_fsne[$key_setting_options] < $array_fsne[$key_entity_type] - 2;
 }
 
 function _is_available_is_at_resource_type($form_object, $array_fsne) {
-	return _is_available_at_this_stage($array_fsne, $form_object->_is_available_get_key_entity_type(), 
-		$form_object->_is_available_get_key_resource_type());
+	return _is_available_at_this_stage($array_fsne, IA_KEY_ENTITY_TYPE, 
+		IA_KEY_RESOURCE_TYPE);
 }
 
 function _is_available_is_at_brn_table($form_object, $array_fsne) { 
-	return _is_available_at_this_stage($array_fsne, $form_object->_is_available_get_key_resource_type(), 
-		$form_object->_is_available_get_key_brn_table());
+	return _is_available_at_this_stage($array_fsne, IA_KEY_RESOURCE_TYPE, 
+		IA_KEY_BRN_TABLE);
 }
 
 function _is_available_is_at_auth_buildings($form_object, $array_fsne) {
-	return _is_available_at_this_stage($array_fsne, $form_object->_is_available_get_key_brn_table(), 
-		$form_object->_is_available_get_key_auth_buildings());
+	return _is_available_at_this_stage($array_fsne, IA_KEY_BRN_TABLE, 
+		IA_KEY_AUTH_BUILDINGS);
 }
 
 function _is_available_is_at_content_type($form_object, $array_fsne) {
-	return _is_available_at_this_stage($array_fsne, $form_object->_is_available_get_key_auth_buildings(), 
-		$form_object->_is_available_get_key_content_type());
+	return _is_available_at_this_stage($array_fsne, IA_KEY_AUTH_BUILDINGS, 
+		IA_KEY_CONTENT);
 }
 
 function _is_available_is_at_entref($form_object, $array_fsne) {
-	return _is_available_at_this_stage($array_fsne, $form_object->_is_available_get_key_content_type(), 
-		$form_object->_is_available_get_key_entref());
+	return _is_available_at_this_stage($array_fsne, IA_KEY_CONTENT, 
+		IA_KEY_ENTREF);
 }
 
 function _is_available_is_at_date($form_object, $array_fsne) {
-	return _is_available_at_this_stage($array_fsne, $form_object->_is_available_get_key_entref(), 
-		$form_object->_is_available_get_key_date());
+	return _is_available_at_this_stage($array_fsne, IA_KEY_ENTREF, 
+		IA_KEY_DATE);
 }
 
 function is_setting_selected(&$form_state, $key_setting_options) {
@@ -1580,6 +1580,6 @@ function is_cb_checked(&$form_state, $option) {
  */
 function _is_available_append_nth($string, $n) {
 	$form_object = new IsAvailableAdminSettingsForm;
-	return $form_object->_is_available_get_module_name() . '_' . $string . '_' . $n;
+	return IA_MODULE_NAME . '_' . $string . '_' . $n;
 }
 
