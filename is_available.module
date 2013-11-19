@@ -186,12 +186,14 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 		$all_building_options, $all) : $all_building_options;
 	$value_dropdown_building = isset($form_state['values']['building_name']) ? 
 		$form_state['values']['building_name'] : key($dropdown_building_options);
-	$value_available_resources = is_available_available_resources(
+		
+	/*$value_available_resources = is_available_available_resources(
 			$value_dropdown_building, $dropdown_building_options, 
 			$value_start_time, $value_end_time,  
 			$value_resource_type, $array_et, $resource_types, 
 			$array_fbld_field, $array_frn_field, $all,
 			$date_format, $multi_id); 
+			*/
 		
 	// Markup the form
 	$form['#prefix'] = '<div class="search-form-' . $multi_id. '">';
@@ -274,6 +276,15 @@ function is_available_resource_search_form($form, $form_state, $array_et = array
 		'#prefix' => '<div class="search" >', 
 		'#suffix' => '</div>',
 	);
+	
+	$st = $form['cal_popup_start']['#default_value'];
+	$et = $form['cal_popup_end']['#default_value'];
+	$value_available_resources = is_available_available_resources(
+			$value_dropdown_building, $dropdown_building_options, 
+			$st, $et,  
+			$value_resource_type, $array_et, $resource_types, 
+			$array_fbld_field, $array_frn_field, $all,
+			$date_format, $multi_id); 
 
 	// Available resources display (result)
 	$form['available_resources'] = array(
